@@ -397,7 +397,7 @@ export function buildSteps(gender: Gender, answers: QuizAnswers): Step[] {
   return steps
 }
 
-export function getTeaseMessage(answers: QuizAnswers, questionNum: number, totalQuestions: number): string | null {
+export function getTeaseMessage(_answers: QuizAnswers, questionNum: number, totalQuestions: number): string | null {
   const pct = Math.round((questionNum / totalQuestions) * 100)
   if (pct < 20) return null
   if (pct < 40) return '🧬 Scanning 12 compounds...'

@@ -1,5 +1,3 @@
-import type { QuizAnswers } from '../types/quiz'
-
 export interface CompoundCopy {
   whyMatched: string
   mechanism: string
@@ -91,7 +89,7 @@ export function getCompoundCopy(id: string): CompoundCopy {
   }
 }
 
-export function getHeroBlurb(id: string, issue: string, goal: string): string {
+export function getHeroBlurb(id: string, _issue: string, _goal: string): string {
   const c = getCompoundCopy(id)
   return c.whyMatched
 }
