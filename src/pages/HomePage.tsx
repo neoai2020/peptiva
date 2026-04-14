@@ -1,89 +1,106 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { loadQuiz, saveQuiz } from '../lib/quizStorage'
+import type { Gender, PrimaryGoal } from '../types/quiz'
+import { defaultQuizAnswers } from '../types/quiz'
+
+type Phase = 'pillar' | 'gender'
+
+const PILLARS: { goal: PrimaryGoal; title: string; description: string }[] = [
+  {
+    goal: 'weight_management',
+    title: 'Weight management',
+    description: 'Struggling with stubborn weight, cravings, or a slow metabolism.',
+  },
+  {
+    goal: 'strength_recovery',
+    title: 'Strength & recovery',
+    description: 'Injuries, joint pain, or slow bounce-back from training.',
+  },
+  {
+    goal: 'cellular_repair',
+    title: 'Anti-aging & cellular health',
+    description: 'Skin renewal, energy decline, or feeling older than you should.',
+  },
+]
 
 export default function HomePage() {
+  const navigate = useNavigate()
+  const [phase, setPhase] = useState<Phase>('pillar')
+
+  const selectPillar = (goal: PrimaryGoal) => {
+    saveQuiz({
+      ...defaultQuizAnswers(),
+      goal,
+    })
+    setPhase('gender')
+  }
+
+  const selectGender = (gender: Gender) => {
+    const prev = loadQuiz()
+    saveQuiz({
+      ...prev,
+      gender,
+    })
+    navigate(`/quiz/${gender}`)
+  }
+
+  const goBackToPillars = () => {
+    setPhase('pillar')
+  }
+
   return (
-    <div className="landing">
-      <nav className="landing-nav">
-        <span className="brand-mark">Peptiva</span>
-        <span className="uk-pill">🇬🇧 UK · GBP · Regulated Lab</span>
-      </nav>
+    <div className="funnel-shell funnel-home">
+      <main className="funnel-main">
+        {phase === 'pillar' && (
+          <>
+            <p className="funnel-eyebrow">Peptiva · Personalised Matching</p>
+            <h1 className="funnel-h1">What Is Your Primary Goal?</h1>
+            <p className="funnel-lead">
+              On the next page, you will take a <strong>short quiz to see if you qualify.</strong>
+            </p>
 
-      <section className="landing-hero">
-        <div className="landing-hero-inner">
-          <p className="landing-eyebrow">Personalised Peptide Matching</p>
-          <h1 className="landing-h1">
-            Finally fix what diet, exercise &amp; willpower can't
-            <br /><em>— in 60 seconds</em>
-          </h1>
-          <p className="landing-lead">
-            Take a short quiz. Our algorithm matches you to 1–2 research-grade
-            peptides from a UK-regulated lab — personalised to your body, goals,
-            and frustrations. Backed by 99.3% purity and third-party lab testing.
-          </p>
-
-          <div className="landing-gender-pick">
-            <Link className="landing-gender-card" to="/quiz/men">
-              <div className="landing-gender-icon">🧬</div>
-              <span className="landing-gender-label">I'm a Man</span>
-              <span className="landing-gender-sub">Start the Men's Quiz →</span>
-            </Link>
-            <Link className="landing-gender-card" to="/quiz/women">
-              <div className="landing-gender-icon">✨</div>
-              <span className="landing-gender-label">I'm a Woman</span>
-              <span className="landing-gender-sub">Start the Women's Quiz →</span>
-            </Link>
-          </div>
-
-          <p className="landing-trust">🔒 Private · No email required · Takes 60 seconds</p>
-        </div>
-      </section>
-
-      <section className="landing-how">
-        <div className="landing-how-inner">
-          <h2 className="landing-how-title">How it works</h2>
-          <div className="landing-how-grid">
-            <div className="landing-how-step">
-              <span className="landing-how-num">1</span>
-              <h3>Take the quiz</h3>
-              <p>Answer a few honest questions about your body, goals, and frustrations.</p>
+            <div className="funnel-options funnel-options--stack">
+              {PILLARS.map((p) => (
+                <button
+                  key={p.goal}
+                  type="button"
+                  className="funnel-opt funnel-opt--pillar"
+                  onClick={() => selectPillar(p.goal)}
+                >
+                  <span className="funnel-opt-title">{p.title}</span>
+                  <span className="funnel-opt-desc">{p.description}</span>
+                </button>
+              ))}
             </div>
-            <div className="landing-how-step">
-              <span className="landing-how-num">2</span>
-              <h3>Get your match</h3>
-              <p>Our algorithm scores 12 UK-lab compounds and finds your #1 match.</p>
-            </div>
-            <div className="landing-how-step">
-              <span className="landing-how-num">3</span>
-              <h3>See results</h3>
-              <p>92% of matched customers see measurable changes within 30 days.</p>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <section className="landing-proof-strip">
-        <div className="landing-proof-inner">
-          <div className="landing-proof-item">
-            <span className="landing-proof-num">4,800+</span>
-            <span className="landing-proof-label">Orders shipped</span>
-          </div>
-          <div className="landing-proof-divider" />
-          <div className="landing-proof-item">
-            <span className="landing-proof-num">99.3%</span>
-            <span className="landing-proof-label">Purity verified</span>
-          </div>
-          <div className="landing-proof-divider" />
-          <div className="landing-proof-item">
-            <span className="landing-proof-num">92%</span>
-            <span className="landing-proof-label">See results in 30 days</span>
-          </div>
-          <div className="landing-proof-divider" />
-          <div className="landing-proof-item">
-            <span className="landing-proof-num">2–3 day</span>
-            <span className="landing-proof-label">Free UK delivery</span>
-          </div>
-        </div>
-      </section>
+            <p className="funnel-trust">🔒 Private · No email required · Takes 60 seconds</p>
+          </>
+        )}
+
+        {phase === 'gender' && (
+          <>
+            <button type="button" className="funnel-back" onClick={goBackToPillars} aria-label="Back">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+              <span>Back</span>
+            </button>
+            <p className="funnel-eyebrow">Almost there</p>
+            <h1 className="funnel-h1">Who is this for?</h1>
+            <p className="funnel-lead">We personalise the quiz based on your answer.</p>
+
+            <div className="funnel-options funnel-options--gender">
+              <button type="button" className="funnel-opt funnel-opt--gender" onClick={() => selectGender('men')}>
+                <span className="funnel-opt-title">I&apos;m a man</span>
+                <span className="funnel-opt-desc">Start the men&apos;s quiz →</span>
+              </button>
+              <button type="button" className="funnel-opt funnel-opt--gender" onClick={() => selectGender('women')}>
+                <span className="funnel-opt-title">I&apos;m a woman</span>
+                <span className="funnel-opt-desc">Start the women&apos;s quiz →</span>
+              </button>
+            </div>
+          </>
+        )}
+      </main>
     </div>
   )
 }

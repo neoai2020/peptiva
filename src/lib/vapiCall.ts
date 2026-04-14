@@ -1,7 +1,7 @@
 import type { QuizAnswers } from '../types/quiz'
 import { recommendPeptides } from './recommend'
 import { getCompoundCopy } from './compoundCopy'
-import { goalLabel, mainIssueLabel } from './quizLabels'
+import { goalLabel, pillarDetailSummary, durationLabel, energyLabel } from './quizLabels'
 
 const VAPI_API_URL = 'https://api.vapi.ai/call/phone'
 const VAPI_API_KEY = import.meta.env.VITE_VAPI_API_KEY as string
@@ -13,9 +13,8 @@ export interface VapiCallPayload {
   gender: string
   goal: string
   mainIssue: string
-  timeline: string
-  experience: string
-  inflammation: string
+  duration: string
+  energy: string
   primaryCompound: string
   whyMatched: string
   mechanism: string
@@ -31,10 +30,9 @@ function buildPayload(answers: QuizAnswers): VapiCallPayload {
     firstName: answers.lead?.firstName ?? '',
     gender: answers.gender ?? '',
     goal: answers.goal ? goalLabel(answers.goal) : '',
-    mainIssue: answers.mainIssue ? mainIssueLabel(answers.mainIssue) : '',
-    timeline: answers.timeline ?? '',
-    experience: answers.experience ?? '',
-    inflammation: answers.inflammation ?? '',
+    mainIssue: pillarDetailSummary(answers),
+    duration: answers.duration ? durationLabel(answers.duration) : '',
+    energy: answers.energy ? energyLabel(answers.energy) : '',
     primaryCompound: rec.primary.compound,
     whyMatched: copy.whyMatched,
     mechanism: copy.mechanism,

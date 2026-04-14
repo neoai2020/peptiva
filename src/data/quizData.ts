@@ -31,220 +31,206 @@ export interface InterstitialScreen {
 
 export type Step = QuizStep | InterstitialScreen
 
-function menInterstitials(): InterstitialScreen[] {
-  return [
-    {
-      type: 'interstitial',
-      id: 'inter_story',
-      variant: 'story',
-      image: '/quiz/men/m-beforeafter.png',
-      badge: 'REAL PEPTIVA CUSTOMER',
-      headline: '"I lost 11kg in 8 weeks — after years of nothing working."',
-      body: 'Mark, 41, from Leeds tried every diet going. Nothing stuck. After his Peptiva match, he started seeing changes in week 2. By week 8, his mates barely recognised him. Same gym routine. Same meals. Different compound.',
-      author: 'Mark D. — Leeds, UK',
-      cta: 'Let\'s find yours →',
-    },
-    {
-      type: 'interstitial',
-      id: 'inter_stat',
-      variant: 'stat',
-      image: '/quiz/facts/fact-vial.png',
-      badge: '99.3% PURITY · THIRD-PARTY VERIFIED',
-      headline: '92% of Peptiva customers see visible results in 30 days.',
-      body: 'Every compound is third-party lab tested with 99.3%+ verified purity. That\'s not luck — that\'s what happens when you use pharmaceutical-grade peptides matched to YOUR body.',
-      cta: 'Almost there →',
-    },
-    {
-      type: 'interstitial',
-      id: 'inter_tease',
-      variant: 'tease',
-      image: '/quiz/facts/fact-dna.png',
-      badge: 'YOUR PROTOCOL IS FORMING',
-      headline: 'We\'re already building something for you.',
-      body: 'Our algorithm is scoring 12 compounds against your profile. A strong match is forming. Just 2–3 more questions and we\'ll lock in your personalised protocol — including your dosing guide and a quiz-taker discount.',
-      cta: 'Keep going →',
-    },
-    {
-      type: 'interstitial',
-      id: 'inter_reveal',
-      variant: 'reveal',
-      image: '/quiz/facts/fact-shield.png',
-      badge: 'YOUR MATCH IS ALMOST READY',
-      headline: 'Last step — one more answer to lock in your #1 match.',
-      body: 'You\'re seconds away from your personalised results — your #1 compound, custom dosing protocol, and exclusive pricing. Plus, every order includes access to Peptiva Concierge, where a certified practitioner guides your protocol.',
-      cta: 'Finish & see my match →',
-    },
-  ]
-}
-
-function womenInterstitials(): InterstitialScreen[] {
-  return [
-    {
-      type: 'interstitial',
-      id: 'inter_story',
-      variant: 'story',
-      image: '/quiz/women/f-beforeafter.png',
-      badge: 'REAL PEPTIVA CUSTOMER',
-      headline: '"My skin is glowing and I\'ve dropped 2 dress sizes. I wish I\'d found this sooner."',
-      body: 'Sophie, 36, from Bristol had tried creams, supplements, and calorie counting for years. After her Peptiva match, she noticed firmer skin in week 1 and steady weight loss by week 3. She said it was the first thing that actually worked.',
-      author: 'Sophie R. — Bristol, UK',
-      cta: 'Let\'s find yours →',
-    },
-    {
-      type: 'interstitial',
-      id: 'inter_stat',
-      variant: 'stat',
-      image: '/quiz/facts/fact-vial.png',
-      badge: '99.3% PURITY · THIRD-PARTY VERIFIED',
-      headline: '92% of Peptiva customers see visible results in 30 days.',
-      body: 'Every compound is third-party lab tested with 99.3%+ verified purity. Not from guessing. Not from another fad. From pharmaceutical-grade peptides matched to your specific body and goals.',
-      cta: 'Almost there →',
-    },
-    {
-      type: 'interstitial',
-      id: 'inter_tease',
-      variant: 'tease',
-      image: '/quiz/facts/fact-dna.png',
-      badge: 'YOUR PROTOCOL IS FORMING',
-      headline: 'We\'re already building something for you.',
-      body: 'Our algorithm is scoring 12 compounds against your profile. We\'re narrowing it down. Just 2–3 more questions and we\'ll have your personalised results — including dosing guide and an exclusive quiz-taker discount.',
-      cta: 'Keep going →',
-    },
-    {
-      type: 'interstitial',
-      id: 'inter_reveal',
-      variant: 'reveal',
-      image: '/quiz/facts/fact-shield.png',
-      badge: 'YOUR MATCH IS ALMOST READY',
-      headline: 'Last step — one more answer to lock in your perfect match.',
-      body: 'You\'re seconds away from your personalised results — your #1 compound, custom protocol, and exclusive pricing. Plus, every order includes Peptiva Concierge access, where a certified practitioner guides your journey.',
-      cta: 'Finish & see my match →',
-    },
-  ]
+function oneInterstitial(_gender: Gender): InterstitialScreen {
+  return {
+    type: 'interstitial',
+    id: 'inter_trust',
+    variant: 'stat',
+    image: '/quiz/facts/fact-vial.png',
+    badge: 'PHARMACEUTICAL GRADE · VERIFIED',
+    headline: 'Your match is already forming.',
+    body: 'Based on what you\'ve told us, we\'re narrowing down the best option from our verified UK catalogue — tailored to your goals, not generic advice.',
+    cta: 'Continue →',
+  }
 }
 
 function menQuestions(): QuizStep[] {
   return [
+    // Q1 — shared: duration
     {
       type: 'question',
-      id: 'goal',
-      title: "What would you fix about your body if you could?",
-      subtitle: 'Be honest. There are no wrong answers — just a better match.',
-      field: 'goal',
+      id: 'duration',
+      title: 'How long have you been working toward this goal?',
+      subtitle: 'There are no wrong answers — this helps us calibrate.',
+      field: 'duration',
       image: '/quiz/men/m-tired.png',
       options: [
-        { value: 'metabolic', label: 'I\'d lose this stubborn weight for good', icon: '🔥' },
-        { value: 'recovery', label: 'I\'d get rid of the pain and recover faster', icon: '💪' },
-        { value: 'skin_aging', label: 'I\'d look 10 years younger', icon: '✨' },
-        { value: 'cellular_energy', label: 'I\'d have real energy again — all day', icon: '⚡' },
+        { value: 'just_starting', label: 'Just getting started', icon: '🌱' },
+        { value: 'few_months', label: 'A few months', icon: '📅' },
+        { value: 'over_a_year', label: 'Over a year, but stuck on a plateau', icon: '⏳' },
+        { value: 'years', label: 'Years — I\'ve tried everything', icon: '🔄' },
       ],
     },
+    // Q2 — shared: energy
     {
       type: 'question',
-      id: 'focus_metabolic',
-      title: "What have you already tried for your weight?",
-      subtitle: 'Most men have tried everything. That\'s exactly why peptides work differently.',
-      field: 'metabolicFocus',
-      image: '/quiz/men/m-weight.png',
-      showWhen: (a) => a.goal === 'metabolic',
-      options: [
-        { value: 'appetite_control', label: 'Diets — but the hunger always wins', icon: '🍔' },
-        { value: 'triple_pathway', label: 'Gym & clean eating — but nothing shifts', icon: '⚖️' },
-        { value: 'recomp_stubborn', label: 'Cardio, weights, everything — still soft', icon: '🎯' },
-      ],
-    },
-    {
-      type: 'question',
-      id: 'focus_recovery',
-      title: "How long have you been dealing with this?",
-      subtitle: 'The longer it\'s been, the more your body needs targeted support — not rest.',
-      field: 'recoveryFocus',
-      image: '/quiz/men/m-pain.png',
-      showWhen: (a) => a.goal === 'recovery',
-      options: [
-        { value: 'injury', label: 'Months or years — an injury that won\'t go', icon: '🩹' },
-        { value: 'training', label: 'Every workout — I\'m wrecked for days after', icon: '🏋️' },
-        { value: 'both', label: 'Both — chronic pain AND slow recovery', icon: '😤' },
-      ],
-    },
-    {
-      type: 'question',
-      id: 'focus_skin',
-      title: "When did you first notice the aging?",
-      subtitle: 'Most men ignore it until it\'s obvious. There\'s a compound for both stages.',
-      field: 'skinFocus',
-      image: '/quiz/men/m-aging.png',
-      showWhen: (a) => a.goal === 'skin_aging',
-      options: [
-        { value: 'collagen_visible', label: 'Recently — fine lines and tired-looking skin', icon: '🪞' },
-        { value: 'full_regen', label: 'A while — face, hair, skin, all declining', icon: '🧬' },
-      ],
-    },
-    {
-      type: 'question',
-      id: 'focus_cellular',
-      title: "How badly is the tiredness affecting your life?",
-      subtitle: 'This isn\'t laziness — it\'s a signal your cells need help.',
-      field: 'cellularFocus',
-      image: '/quiz/men/m-tired.png',
-      showWhen: (a) => a.goal === 'cellular_energy',
-      options: [
-        { value: 'mitochondrial', label: 'It ruins my day — I can barely function', icon: '🔋' },
-        { value: 'nad_systems', label: 'I feel myself slowing down year after year', icon: '🧪' },
-      ],
-    },
-    {
-      type: 'question',
-      id: 'issue',
-      title: "Right now — what frustrates you the most?",
-      subtitle: 'Pick the ONE thing. We\'ll match a compound specifically to it.',
-      field: 'mainIssue',
-      image: '/quiz/men/m-weight.png',
-      options: [
-        { value: 'stubborn_weight', label: 'Stubborn weight that won\'t shift', icon: '⚖️' },
-        { value: 'constant_hunger', label: 'Hunger and cravings I can\'t control', icon: '🍕' },
-        { value: 'low_energy_crash', label: 'No energy — I crash every afternoon', icon: '😴' },
-        { value: 'injury_or_pain', label: 'Pain or an injury holding me back', icon: '🩹' },
-        { value: 'skin_hair_aging', label: 'Looking older than I should', icon: '🪞' },
-        { value: 'metabolism_feels_off', label: 'My metabolism feels completely broken', icon: '🔧' },
-      ],
-    },
-    {
-      type: 'question',
-      id: 'timeline',
-      title: "How quickly do you want to see changes?",
-      subtitle: 'This helps us pick the right compound intensity for your profile.',
-      field: 'timeline',
+      id: 'energy',
+      title: 'How would you describe your energy levels right now?',
+      subtitle: 'This tells us a lot about what your body actually needs.',
+      field: 'energy',
       image: '/quiz/men/m-recovery.png',
       options: [
-        { value: 'asap', label: 'Fast — I want to feel it this month', icon: '🚀' },
-        { value: 'weeks', label: 'Steady — a few weeks is fine', icon: '📈' },
-        { value: 'long_game', label: 'Deep, lasting change over months', icon: '♾️' },
+        { value: 'great', label: 'I feel great, plenty of energy', icon: '⚡' },
+        { value: 'afternoon_crash', label: 'Okay, but I crash in the afternoon', icon: '☕' },
+        { value: 'low_all_day', label: 'Low most of the day', icon: '🔋' },
+        { value: 'exhausted', label: 'Exhausted no matter what I try', icon: '😴' },
       ],
     },
+    // Q3 — weight branch
     {
       type: 'question',
-      id: 'experience',
-      title: "Have you ever tried anything like peptides before?",
-      subtitle: 'Most men haven\'t — and that\'s exactly who sees the biggest results.',
-      field: 'experience',
+      id: 'weight_challenge',
+      title: 'What\'s been the hardest part about managing your weight?',
+      subtitle: 'Be honest — this is how we find the right fit for you.',
+      field: 'weightChallenge',
+      image: '/quiz/men/m-weight.png',
+      showWhen: (a) => a.goal === 'weight_management',
+      options: [
+        { value: 'cravings', label: 'Constant cravings and appetite', icon: '🍔' },
+        { value: 'slow_metabolism', label: 'Slow metabolism — doesn\'t matter what I eat', icon: '🐢' },
+        { value: 'belly_fat', label: 'Belly fat that won\'t budge', icon: '🎯' },
+        { value: 'yo_yo', label: 'I lose weight, then gain it all back', icon: '🔄' },
+      ],
+    },
+    // Q3 — strength branch
+    {
+      type: 'question',
+      id: 'fitness_challenge',
+      title: 'What\'s your main frustration right now?',
+      subtitle: 'This helps us understand what kind of support you need.',
+      field: 'fitnessChallenge',
+      image: '/quiz/men/m-pain.png',
+      showWhen: (a) => a.goal === 'strength_recovery',
+      options: [
+        { value: 'soreness', label: 'I\'m sore for days after training', icon: '😣' },
+        { value: 'plateau', label: 'I\'ve hit a strength plateau', icon: '📊' },
+        { value: 'nagging_injury', label: 'A nagging injury that won\'t heal', icon: '🩹' },
+        { value: 'slower_recovery', label: 'My body recovers slower than it used to', icon: '⏰' },
+      ],
+    },
+    // Q3 — cellular branch
+    {
+      type: 'question',
+      id: 'aging_concern',
+      title: 'What concerns you most about aging?',
+      subtitle: 'We\'ll match you to the right solution based on this.',
+      field: 'agingConcern',
+      image: '/quiz/men/m-aging.png',
+      showWhen: (a) => a.goal === 'cellular_repair',
+      options: [
+        { value: 'skin', label: 'Skin changes — wrinkles, thinning, dullness', icon: '🪞' },
+        { value: 'energy_mental', label: 'Less energy and mental sharpness', icon: '🧠' },
+        { value: 'joint_stiffness', label: 'Joint stiffness and slower recovery', icon: '🦴' },
+        { value: 'all_of_it', label: 'All of it — I want to age better overall', icon: '✨' },
+      ],
+    },
+    // Q4 — weight branch
+    {
+      type: 'question',
+      id: 'weight_approach',
+      title: 'Have you tried any of these before?',
+      subtitle: 'This helps us avoid recommending something that hasn\'t worked for you.',
+      field: 'weightApproach',
+      image: '/quiz/men/m-transform.png',
+      showWhen: (a) => a.goal === 'weight_management',
+      options: [
+        { value: 'dieting', label: 'Dieting and calorie counting', icon: '🥗' },
+        { value: 'supplements', label: 'Supplements or fat burners', icon: '💊' },
+        { value: 'prescription', label: 'Prescription medication', icon: '💉' },
+        { value: 'none', label: 'None of the above', icon: '🆕' },
+      ],
+    },
+    // Q4 — strength branch
+    {
+      type: 'question',
+      id: 'activity_level',
+      title: 'How many days per week are you active?',
+      subtitle: 'More active means your body needs different support.',
+      field: 'activityLevel',
+      image: '/quiz/men/m-recovery.png',
+      showWhen: (a) => a.goal === 'strength_recovery',
+      options: [
+        { value: '1_2_days', label: '1–2 days', icon: '🚶' },
+        { value: '3_4_days', label: '3–4 days', icon: '🏃' },
+        { value: '5_6_days', label: '5–6 days', icon: '💪' },
+        { value: 'every_day', label: 'Every day', icon: '🔥' },
+      ],
+    },
+    // Q4 — cellular branch
+    {
+      type: 'question',
+      id: 'health_approach',
+      title: 'How would you describe your approach to health so far?',
+      subtitle: 'This helps us pick the right starting point for you.',
+      field: 'healthApproach',
+      image: '/quiz/men/m-transform.png',
+      showWhen: (a) => a.goal === 'cellular_repair',
+      options: [
+        { value: 'eat_exercise', label: 'I eat well and exercise regularly', icon: '🥦' },
+        { value: 'vitamins', label: 'I take vitamins and supplements', icon: '💊' },
+        { value: 'biohacking', label: 'I actively research longevity and biohacking', icon: '🧬' },
+        { value: 'just_starting', label: 'Just starting to take it seriously', icon: '🌱' },
+      ],
+    },
+    // Q5 — weight branch
+    {
+      type: 'question',
+      id: 'weight_outcome',
+      title: 'What would success look like for you in 90 days?',
+      subtitle: 'Dream big or keep it realistic — both are valid.',
+      field: 'weightOutcome',
+      image: '/quiz/men/m-weight.png',
+      showWhen: (a) => a.goal === 'weight_management',
+      options: [
+        { value: 'lose_5_10', label: 'Lose 5–10 lbs and feel lighter', icon: '🎯' },
+        { value: 'clothing_size', label: 'Drop a full clothing size', icon: '👕' },
+        { value: 'major_transform', label: 'Major transformation — 20+ lbs', icon: '🚀' },
+        { value: 'stop_gaining', label: 'Just stop gaining, honestly', icon: '✋' },
+      ],
+    },
+    // Q5 — strength branch
+    {
+      type: 'question',
+      id: 'fitness_outcome',
+      title: 'What does your ideal outcome look like?',
+      subtitle: 'This is the last piece we need to lock in your match.',
+      field: 'fitnessOutcome',
+      image: '/quiz/men/m-pain.png',
+      showWhen: (a) => a.goal === 'strength_recovery',
+      options: [
+        { value: 'pain_free', label: 'Get back to training pain-free', icon: '🎯' },
+        { value: 'break_plateaus', label: 'Break through plateaus and get stronger', icon: '📈' },
+        { value: 'recover_faster', label: 'Recover faster between sessions', icon: '⚡' },
+        { value: 'stay_strong_aging', label: 'Stay active and strong as I age', icon: '🏔️' },
+      ],
+    },
+    // Q5 — cellular branch
+    {
+      type: 'question',
+      id: 'aging_outcome',
+      title: 'Where would you like to see results first?',
+      subtitle: 'This is the last piece we need to lock in your match.',
+      field: 'agingOutcome',
+      image: '/quiz/men/m-aging.png',
+      showWhen: (a) => a.goal === 'cellular_repair',
+      options: [
+        { value: 'skin_hair', label: 'Visible improvements in skin and hair', icon: '✨' },
+        { value: 'energy_clarity', label: 'More energy and mental clarity', icon: '🧠' },
+        { value: 'sleep_stress', label: 'Better sleep and stress recovery', icon: '😴' },
+        { value: 'overall_vitality', label: 'Overall vitality — I want to feel younger', icon: '💫' },
+      ],
+    },
+    // Q6 — shared: research openness
+    {
+      type: 'question',
+      id: 'research_openness',
+      title: 'One last thing — are you comfortable with research-backed wellness products?',
+      subtitle: 'Our recommendations are grounded in published science, not trends.',
+      field: 'researchOpenness',
       image: '/quiz/men/m-transform.png',
       options: [
-        { value: 'new', label: 'No — this is brand new to me', icon: '🆕' },
-        { value: 'some', label: 'I\'ve looked into it / tried supplements', icon: '🧐' },
-        { value: 'advanced', label: 'Yes — I\'ve used peptides before', icon: '🎓' },
-      ],
-    },
-    {
-      type: 'question',
-      id: 'inflammation',
-      title: "Last one — do your joints ache or feel stiff?",
-      subtitle: 'Inflammation changes your match completely. Don\'t skip this.',
-      field: 'inflammation',
-      image: '/quiz/men/m-pain.png',
-      options: [
-        { value: 'yes', label: 'Yes — it bothers me most days', icon: '🦴' },
-        { value: 'no', label: 'No, my joints are fine', icon: '👍' },
+        { value: 'yes_open', label: 'Yes — I\'m open to science-backed solutions', icon: '✅' },
+        { value: 'learn_more', label: 'I\'d like to learn more first', icon: '📖' },
       ],
     },
   ]
@@ -252,126 +238,191 @@ function menQuestions(): QuizStep[] {
 
 function womenQuestions(): QuizStep[] {
   return [
+    // Q1 — shared: duration
     {
       type: 'question',
-      id: 'goal',
-      title: "If you could change one thing about how you feel — what is it?",
-      subtitle: 'Thousands of women feel the same. Your answer helps us find the right solution.',
-      field: 'goal',
+      id: 'duration',
+      title: 'How long have you been working toward this goal?',
+      subtitle: 'There are no wrong answers — this helps us calibrate.',
+      field: 'duration',
       image: '/quiz/women/f-tired.png',
       options: [
-        { value: 'metabolic', label: 'I\'d finally lose this stubborn weight', icon: '🔥' },
-        { value: 'recovery', label: 'I\'d be free of pain and soreness', icon: '💪' },
-        { value: 'skin_aging', label: 'I\'d look in the mirror and love what I see', icon: '✨' },
-        { value: 'cellular_energy', label: 'I\'d have energy to actually live my life', icon: '⚡' },
+        { value: 'just_starting', label: 'Just getting started', icon: '🌱' },
+        { value: 'few_months', label: 'A few months', icon: '📅' },
+        { value: 'over_a_year', label: 'Over a year, but stuck on a plateau', icon: '⏳' },
+        { value: 'years', label: 'Years — I\'ve tried everything', icon: '🔄' },
       ],
     },
+    // Q2 — shared: energy
     {
       type: 'question',
-      id: 'focus_metabolic',
-      title: "What have you already tried to lose weight?",
-      subtitle: 'Most women have tried everything. That\'s exactly why peptides are different.',
-      field: 'metabolicFocus',
-      image: '/quiz/women/f-weight.png',
-      showWhen: (a) => a.goal === 'metabolic',
-      options: [
-        { value: 'appetite_control', label: 'Dieting — but the cravings always win', icon: '🍫' },
-        { value: 'triple_pathway', label: 'Clean eating & gym — but nothing budges', icon: '⚖️' },
-        { value: 'recomp_stubborn', label: 'I\'ve tried everything for these stubborn areas', icon: '🎯' },
-      ],
-    },
-    {
-      type: 'question',
-      id: 'focus_recovery',
-      title: "How long have you been living with this pain?",
-      subtitle: 'The longer you\'ve had it, the more your body needs real support — not just rest.',
-      field: 'recoveryFocus',
-      image: '/quiz/women/f-pain.png',
-      showWhen: (a) => a.goal === 'recovery',
-      options: [
-        { value: 'injury', label: 'Months or years — it never fully heals', icon: '🩹' },
-        { value: 'training', label: 'After every workout — I\'m sore for days', icon: '🏋️' },
-        { value: 'both', label: 'Both — ongoing pain AND slow recovery', icon: '😤' },
-      ],
-    },
-    {
-      type: 'question',
-      id: 'focus_skin',
-      title: "When did you start noticing the change in your skin?",
-      subtitle: 'Peptides rebuild collagen at the cellular level. The earlier you start, the better.',
-      field: 'skinFocus',
-      image: '/quiz/women/f-aging.png',
-      showWhen: (a) => a.goal === 'skin_aging',
-      options: [
-        { value: 'collagen_visible', label: 'Recently — lines, dullness, less glow', icon: '🪞' },
-        { value: 'full_regen', label: 'For a while now — skin, hair, everything', icon: '🧬' },
-      ],
-    },
-    {
-      type: 'question',
-      id: 'focus_cellular',
-      title: "How much is the exhaustion affecting your daily life?",
-      subtitle: 'This isn\'t normal tiredness — it\'s your cells asking for help.',
-      field: 'cellularFocus',
-      image: '/quiz/women/f-tired.png',
-      showWhen: (a) => a.goal === 'cellular_energy',
-      options: [
-        { value: 'mitochondrial', label: 'It\'s ruining everything — I can barely get through the day', icon: '🔋' },
-        { value: 'nad_systems', label: 'I just feel like my body is shutting down slowly', icon: '🧪' },
-      ],
-    },
-    {
-      type: 'question',
-      id: 'issue',
-      title: "Right now — what frustrates you the absolute most?",
-      subtitle: 'Pick the ONE thing. We\'ll match a compound specifically to it.',
-      field: 'mainIssue',
-      image: '/quiz/women/f-weight.png',
-      options: [
-        { value: 'stubborn_weight', label: 'Stubborn weight that won\'t budge', icon: '⚖️' },
-        { value: 'constant_hunger', label: 'Cravings I can\'t control', icon: '🍕' },
-        { value: 'low_energy_crash', label: 'No energy — I crash every afternoon', icon: '😴' },
-        { value: 'injury_or_pain', label: 'Pain that limits what I can do', icon: '🩹' },
-        { value: 'skin_hair_aging', label: 'My skin and hair are aging too fast', icon: '🪞' },
-        { value: 'metabolism_feels_off', label: 'My metabolism is completely shot', icon: '🔧' },
-      ],
-    },
-    {
-      type: 'question',
-      id: 'timeline',
-      title: "How quickly do you want to see changes?",
-      subtitle: 'This helps us match the right compound intensity for you.',
-      field: 'timeline',
+      id: 'energy',
+      title: 'How would you describe your energy levels right now?',
+      subtitle: 'This tells us a lot about what your body actually needs.',
+      field: 'energy',
       image: '/quiz/women/f-recovery.png',
       options: [
-        { value: 'asap', label: 'Fast — I want to feel it this month', icon: '🚀' },
-        { value: 'weeks', label: 'Gradual — a few weeks is fine', icon: '📈' },
-        { value: 'long_game', label: 'Deep, lasting change over months', icon: '♾️' },
+        { value: 'great', label: 'I feel great, plenty of energy', icon: '⚡' },
+        { value: 'afternoon_crash', label: 'Okay, but I crash in the afternoon', icon: '☕' },
+        { value: 'low_all_day', label: 'Low most of the day', icon: '🔋' },
+        { value: 'exhausted', label: 'Exhausted no matter what I try', icon: '😴' },
       ],
     },
+    // Q3 — weight branch
     {
       type: 'question',
-      id: 'experience',
-      title: "Have you ever heard of peptides before?",
-      subtitle: 'Most women haven\'t — and honestly, they see the biggest transformations.',
-      field: 'experience',
+      id: 'weight_challenge',
+      title: 'What\'s been the hardest part about managing your weight?',
+      subtitle: 'Most women have tried everything. That\'s exactly why this is different.',
+      field: 'weightChallenge',
+      image: '/quiz/women/f-weight.png',
+      showWhen: (a) => a.goal === 'weight_management',
+      options: [
+        { value: 'cravings', label: 'Constant cravings — they always win', icon: '🍫' },
+        { value: 'slow_metabolism', label: 'Slow metabolism — doesn\'t matter what I eat', icon: '🐢' },
+        { value: 'belly_fat', label: 'Stubborn areas that won\'t change', icon: '🎯' },
+        { value: 'yo_yo', label: 'I lose it, then gain it all back', icon: '🔄' },
+      ],
+    },
+    // Q3 — strength branch
+    {
+      type: 'question',
+      id: 'fitness_challenge',
+      title: 'What\'s been your main frustration?',
+      subtitle: 'The longer it\'s been, the more your body needs real support.',
+      field: 'fitnessChallenge',
+      image: '/quiz/women/f-pain.png',
+      showWhen: (a) => a.goal === 'strength_recovery',
+      options: [
+        { value: 'soreness', label: 'I\'m sore for days after every workout', icon: '😣' },
+        { value: 'plateau', label: 'I\'ve hit a strength plateau', icon: '📊' },
+        { value: 'nagging_injury', label: 'A nagging injury that won\'t fully heal', icon: '🩹' },
+        { value: 'slower_recovery', label: 'My body just recovers slower than it used to', icon: '⏰' },
+      ],
+    },
+    // Q3 — cellular branch
+    {
+      type: 'question',
+      id: 'aging_concern',
+      title: 'What concerns you most about aging?',
+      subtitle: 'We\'ll match you to the right solution based on this.',
+      field: 'agingConcern',
+      image: '/quiz/women/f-aging.png',
+      showWhen: (a) => a.goal === 'cellular_repair',
+      options: [
+        { value: 'skin', label: 'Skin changes — wrinkles, thinning, dullness', icon: '🪞' },
+        { value: 'energy_mental', label: 'Less energy and mental sharpness', icon: '🧠' },
+        { value: 'joint_stiffness', label: 'Joint stiffness and slower recovery', icon: '🦴' },
+        { value: 'all_of_it', label: 'All of it — I want to age better overall', icon: '✨' },
+      ],
+    },
+    // Q4 — weight branch
+    {
+      type: 'question',
+      id: 'weight_approach',
+      title: 'Have you tried any of these before?',
+      subtitle: 'This helps us avoid recommending something that hasn\'t worked.',
+      field: 'weightApproach',
+      image: '/quiz/women/f-transform.png',
+      showWhen: (a) => a.goal === 'weight_management',
+      options: [
+        { value: 'dieting', label: 'Dieting and calorie counting', icon: '🥗' },
+        { value: 'supplements', label: 'Supplements or fat burners', icon: '💊' },
+        { value: 'prescription', label: 'Prescription medication', icon: '💉' },
+        { value: 'none', label: 'None of the above', icon: '🆕' },
+      ],
+    },
+    // Q4 — strength branch
+    {
+      type: 'question',
+      id: 'activity_level',
+      title: 'How many days per week are you active?',
+      subtitle: 'More active means your body needs different support.',
+      field: 'activityLevel',
+      image: '/quiz/women/f-recovery.png',
+      showWhen: (a) => a.goal === 'strength_recovery',
+      options: [
+        { value: '1_2_days', label: '1–2 days', icon: '🚶' },
+        { value: '3_4_days', label: '3–4 days', icon: '🏃' },
+        { value: '5_6_days', label: '5–6 days', icon: '💪' },
+        { value: 'every_day', label: 'Every day', icon: '🔥' },
+      ],
+    },
+    // Q4 — cellular branch
+    {
+      type: 'question',
+      id: 'health_approach',
+      title: 'How would you describe your approach to health so far?',
+      subtitle: 'This helps us pick the right starting point for you.',
+      field: 'healthApproach',
+      image: '/quiz/women/f-transform.png',
+      showWhen: (a) => a.goal === 'cellular_repair',
+      options: [
+        { value: 'eat_exercise', label: 'I eat well and exercise regularly', icon: '🥦' },
+        { value: 'vitamins', label: 'I take vitamins and supplements', icon: '💊' },
+        { value: 'biohacking', label: 'I actively research longevity and biohacking', icon: '🧬' },
+        { value: 'just_starting', label: 'Just starting to take it seriously', icon: '🌱' },
+      ],
+    },
+    // Q5 — weight branch
+    {
+      type: 'question',
+      id: 'weight_outcome',
+      title: 'What would success look like for you in 90 days?',
+      subtitle: 'Dream big or keep it realistic — both are valid.',
+      field: 'weightOutcome',
+      image: '/quiz/women/f-weight.png',
+      showWhen: (a) => a.goal === 'weight_management',
+      options: [
+        { value: 'lose_5_10', label: 'Lose 5–10 lbs and feel lighter', icon: '🎯' },
+        { value: 'clothing_size', label: 'Drop a full clothing size', icon: '👗' },
+        { value: 'major_transform', label: 'Major transformation — 20+ lbs', icon: '🚀' },
+        { value: 'stop_gaining', label: 'Just stop gaining, honestly', icon: '✋' },
+      ],
+    },
+    // Q5 — strength branch
+    {
+      type: 'question',
+      id: 'fitness_outcome',
+      title: 'What does your ideal outcome look like?',
+      subtitle: 'This is the last piece we need to lock in your match.',
+      field: 'fitnessOutcome',
+      image: '/quiz/women/f-pain.png',
+      showWhen: (a) => a.goal === 'strength_recovery',
+      options: [
+        { value: 'pain_free', label: 'Get back to training pain-free', icon: '🎯' },
+        { value: 'break_plateaus', label: 'Break through plateaus and get stronger', icon: '📈' },
+        { value: 'recover_faster', label: 'Recover faster between sessions', icon: '⚡' },
+        { value: 'stay_strong_aging', label: 'Stay active and strong as I age', icon: '🏔️' },
+      ],
+    },
+    // Q5 — cellular branch
+    {
+      type: 'question',
+      id: 'aging_outcome',
+      title: 'Where would you like to see results first?',
+      subtitle: 'This is the last piece we need to lock in your match.',
+      field: 'agingOutcome',
+      image: '/quiz/women/f-aging.png',
+      showWhen: (a) => a.goal === 'cellular_repair',
+      options: [
+        { value: 'skin_hair', label: 'Visible improvements in skin and hair', icon: '✨' },
+        { value: 'energy_clarity', label: 'More energy and mental clarity', icon: '🧠' },
+        { value: 'sleep_stress', label: 'Better sleep and stress recovery', icon: '😴' },
+        { value: 'overall_vitality', label: 'Overall vitality — I want to feel younger', icon: '💫' },
+      ],
+    },
+    // Q6 — shared: research openness
+    {
+      type: 'question',
+      id: 'research_openness',
+      title: 'One last thing — are you comfortable with research-backed wellness products?',
+      subtitle: 'Our recommendations are grounded in published science, not trends.',
+      field: 'researchOpenness',
       image: '/quiz/women/f-transform.png',
       options: [
-        { value: 'new', label: 'No — this is completely new to me', icon: '🆕' },
-        { value: 'some', label: 'I\'ve read a bit about them', icon: '🧐' },
-        { value: 'advanced', label: 'Yes — I\'ve used them before', icon: '🎓' },
-      ],
-    },
-    {
-      type: 'question',
-      id: 'inflammation',
-      title: "Last question — do your joints ache or feel stiff?",
-      subtitle: 'Inflammation changes your match completely. Don\'t skip this.',
-      field: 'inflammation',
-      image: '/quiz/women/f-pain.png',
-      options: [
-        { value: 'yes', label: 'Yes — it bothers me regularly', icon: '🦴' },
-        { value: 'no', label: 'No, my joints are fine', icon: '👍' },
+        { value: 'yes_open', label: 'Yes — I\'m open to science-backed solutions', icon: '✅' },
+        { value: 'learn_more', label: 'I\'d like to learn more first', icon: '📖' },
       ],
     },
   ]
@@ -383,26 +434,28 @@ export function getQuestions(gender: Gender): QuizStep[] {
 
 export function buildSteps(gender: Gender, answers: QuizAnswers): Step[] {
   const questions = getQuestions(gender)
-  const interstitials = gender === 'men' ? menInterstitials() : womenInterstitials()
-  const active = questions.filter((q) => !q.showWhen || q.showWhen(answers))
+  const active = questions.filter((q) => {
+    if (q.field === 'goal' && answers.goal) return false
+    return !q.showWhen || q.showWhen(answers)
+  })
+  const trust = oneInterstitial(gender)
   const steps: Step[] = []
-  let interIdx = 0
   for (let i = 0; i < active.length; i++) {
     steps.push(active[i])
-    if ((i + 1) % 2 === 0 && interIdx < interstitials.length) {
-      steps.push(interstitials[interIdx])
-      interIdx++
-    }
+    if (i === 1) steps.push(trust)
   }
   return steps
 }
 
-export function getTeaseMessage(_answers: QuizAnswers, questionNum: number, totalQuestions: number): string | null {
+export function getTeaseMessage(
+  _answers: QuizAnswers,
+  questionNum: number,
+  totalQuestions: number,
+): string | null {
   const pct = Math.round((questionNum / totalQuestions) * 100)
-  if (pct < 20) return null
-  if (pct < 40) return '🧬 Scanning 12 compounds...'
-  if (pct < 55) return '🔬 Strong match forming — keep going'
-  if (pct < 70) return '📊 3 compounds shortlisted for you'
-  if (pct < 85) return '🎯 Narrowing to your #1 match...'
-  return '✅ Your personalised protocol is almost ready'
+  if (pct < 25) return null
+  if (pct < 45) return '🧬 Analysing your answers...'
+  if (pct < 65) return '🔬 A strong match is forming — keep going'
+  if (pct < 85) return '🎯 Narrowing to your top match...'
+  return '✅ Your personalised result is almost ready'
 }

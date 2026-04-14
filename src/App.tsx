@@ -4,6 +4,7 @@ import QuizPage from './pages/QuizPage'
 import CapturePage from './pages/CapturePage'
 import ResultsPage from './pages/ResultsPage'
 import UpsellPage from './pages/UpsellPage'
+import TSLPage from './pages/TSLPage'
 import ThemeToggle from './components/ThemeToggle'
 import { AuthProvider, useAuth } from './members/context/AuthContext'
 import MembersLayout from './members/components/MembersLayout'
@@ -51,7 +52,12 @@ function MembersRoutes() {
 
 export default function App() {
   const { pathname } = useLocation()
-  const showToggle = pathname === '/'
+  const hideThemeToggle =
+    pathname === '/' ||
+    pathname.startsWith('/quiz') ||
+    ['/capture', '/results', '/upsell', '/tsl'].includes(pathname) ||
+    pathname.startsWith('/members')
+  const showToggle = !hideThemeToggle
 
   return (
     <AuthProvider>
@@ -62,6 +68,7 @@ export default function App() {
         <Route path="/capture" element={<CapturePage />} />
         <Route path="/results" element={<ResultsPage />} />
         <Route path="/upsell" element={<UpsellPage />} />
+        <Route path="/tsl" element={<TSLPage />} />
         <Route path="/members/*" element={<MembersRoutes />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

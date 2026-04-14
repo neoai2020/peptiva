@@ -10,7 +10,9 @@ export default function CapturePage() {
   const [phone, setPhone] = useState('')
   const [error, setError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [submitting, setSubmitting] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!firstName.trim()) { setError('Please enter your first name'); return }
     if (!email.trim() || !email.includes('@')) { setError('Please enter a valid email'); return }
@@ -24,15 +26,17 @@ export default function CapturePage() {
     saveQuiz(answers)
 
     if (answers.lead.phone) {
-      triggerVapiCall(answers).then((result) => {
-        if (result.ok) console.log('[VAPI] Call queued:', result.callId)
-      })
+      setSubmitting(true)
+      const result = await triggerVapiCall(answers)
+      if (result.ok) console.log('[VAPI] Call queued:', result.callId)
+      else console.warn('[VAPI] Call failed:', result.error)
     }
 
     navigate('/results', { replace: true })
   }
 
   return (
+    <div className="funnel-shell funnel-capture">
     <div className="cap-shell">
       <div className="cap-glow" />
 
@@ -45,8 +49,8 @@ export default function CapturePage() {
         <div className="cap-icon">🧬</div>
         <h1 className="cap-h1">Your #1 match is ready</h1>
         <p className="cap-sub">
-          We've scored 12 compounds against your profile. Enter your details
-          to unlock your personalised results, dosing guide, and exclusive
+          We&apos;ve scored your answers against our UK-verified catalogue. Enter your details
+          to unlock your personalised results, protocol guide, and exclusive
           quiz-taker pricing.
         </p>
 
@@ -105,8 +109,8 @@ export default function CapturePage() {
 
           {error && <p className="cap-error">{error}</p>}
 
-          <button type="submit" className="cap-btn">
-            Unlock My Results →
+          <button type="submit" className="cap-btn" disabled={submitting}>
+            {submitting ? 'Preparing your results…' : 'Unlock My Results →'}
           </button>
 
           <p className="cap-legal">
@@ -127,6 +131,7 @@ export default function CapturePage() {
           <span>147 people completed this quiz today — limited stock on matched compounds</span>
         </div>
       </main>
+    </div>
     </div>
   )
 }

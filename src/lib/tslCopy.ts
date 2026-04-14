@@ -1,11 +1,11 @@
 import type { Peptide } from '../data/peptides'
 import type { QuizAnswers } from '../types/quiz'
-import { goalLabel, mainIssueLabel, timelineLabel } from './quizLabels'
+import { goalLabel, pillarDetailSummary, durationLabel } from './quizLabels'
 
-/** Short, results-page headline tied to their issue + top SKU. */
+/** Short, results-page headline tied to their pillar detail + top SKU. */
 export function resultsHeadline(answers: QuizAnswers, primary: Peptide): string {
-  const issue = answers.mainIssue ? mainIssueLabel(answers.mainIssue) : 'your priorities'
-  return `Based on “${issue}”, your #1 catalogue match is ${primary.sku}.`
+  const detail = pillarDetailSummary(answers)
+  return `Based on "${detail}", your #1 catalogue match is ${primary.sku}.`
 }
 
 export function resultsSubhead(answers: QuizAnswers, primary: Peptide): string {
@@ -21,20 +21,20 @@ export function resultsNarrative(
 ): string {
   const parts: string[] = []
 
-  if (answers.mainIssue) {
+  if (answers.goal) {
     parts.push(
-      `You prioritised ${mainIssueLabel(answers.mainIssue).toLowerCase()} over everything else in the quiz.`,
+      `You chose ${goalLabel(answers.goal)} and told us: ${pillarDetailSummary(answers).toLowerCase()}.`,
     )
   }
 
-  if (answers.experience === 'new') {
-    parts.push('You said you are newer to research peptides, so we avoided needlessly exotic pairings.')
-  } else if (answers.experience === 'advanced') {
-    parts.push('You said you are advanced — we allowed stronger pathway matches where they fit your answers.')
+  if (answers.duration === 'just_starting') {
+    parts.push('You\'re just getting started, so we prioritised gentler, well-documented options.')
+  } else if (answers.duration === 'years') {
+    parts.push('You\'ve been at this for years — we allowed stronger, more advanced matches.')
   }
 
-  if (answers.inflammation === 'yes') {
-    parts.push('Because you flagged inflammation or joint stress, repair-forward SKUs scored higher.')
+  if (answers.energy === 'exhausted' || answers.energy === 'low_all_day') {
+    parts.push('Because you flagged low energy, compounds with recovery and energy support scored higher.')
   }
 
   parts.push(
@@ -53,10 +53,10 @@ export function subheadFor(answers: QuizAnswers, primary: Peptide): string {
 }
 
 export function storyParagraph(answers: QuizAnswers, primary: Peptide): string {
-  const t = answers.timeline ? timelineLabel(answers.timeline) : 'your timeline'
-  const inf =
-    answers.inflammation === 'yes'
-      ? 'You flagged inflammation or joint stress.'
-      : 'You did not prioritise active inflammation.'
-  return `${inf} On timing, you chose ${t}. That is how ${primary.sku} ended up first: ${primary.description}`
+  const dur = answers.duration ? durationLabel(answers.duration) : 'your timeline'
+  const energyNote =
+    answers.energy === 'exhausted' || answers.energy === 'low_all_day'
+      ? 'You flagged significant fatigue, which boosted recovery-forward compounds.'
+      : 'Energy was not a primary signal for your profile.'
+  return `${energyNote} On your journey, you said: ${dur.toLowerCase()}. That is how ${primary.sku} ended up first: ${primary.description}`
 }

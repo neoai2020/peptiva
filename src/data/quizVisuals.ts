@@ -24,10 +24,9 @@ const POOL = {
 export const APEX_HERO = POOL.brand
 
 const byGoal: Record<NonNullable<PrimaryGoal>, string> = {
-  metabolic: POOL.vialB,
-  recovery: POOL.vialD,
-  skin_aging: POOL.vialE,
-  cellular_energy: POOL.vialF,
+  weight_management: POOL.vialB,
+  strength_recovery: POOL.vialD,
+  cellular_repair: POOL.vialE,
 }
 
 /** Returns hero image + short caption for the current step. */
