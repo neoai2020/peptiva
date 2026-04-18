@@ -31,74 +31,70 @@ function scoreFor(answers: QuizAnswers): Record<string, number> {
   const { goal } = answers
   if (!goal) return scores
 
-  /* ═══════════ WEIGHT MANAGEMENT ═══════════ */
+  /* ═══════════ WEIGHT MANAGEMENT ═══════════
+     Products: Reta (17), Reta 2.0 (21), Tirzepatide (2), Cagrilintide (18)
+     Removed: Semaglutide → redirected to Cagrilintide/Tirzepatide
+              HGH Fragment → redirected to Reta
+  */
   if (goal === 'weight_management') {
-    // Q1 Duration
     switch (answers.duration) {
-      case 'just_starting': add('3', 4); add('18', 2); break
-      case 'few_months':    add('2', 2); add('3', 2); break
+      case 'just_starting': add('18', 4); add('2', 3); break
+      case 'few_months':    add('2', 3); add('18', 2); break
       case 'over_a_year':   add('2', 3); add('17', 3); break
-      case 'years':         add('17', 5); add('2', 2); break
+      case 'years':         add('17', 4); add('21', 5); add('2', 2); break
     }
-    // Q2 Energy
     switch (answers.energy) {
       case 'afternoon_crash': add('2', 2); break
-      case 'low_all_day':     add('17', 2); break
-      case 'exhausted':       add('17', 3); break
+      case 'low_all_day':     add('17', 2); add('21', 2); break
+      case 'exhausted':       add('17', 3); add('21', 3); break
     }
-    // Q3 Weight Challenge
     switch (answers.weightChallenge) {
-      case 'cravings':        add('3', 5); add('18', 5); add('2', 3); break
-      case 'slow_metabolism':  add('17', 5); add('2', 4); break
-      case 'belly_fat':       add('1', 5); add('17', 3); break
+      case 'cravings':        add('18', 5); add('2', 4); break
+      case 'slow_metabolism':  add('17', 5); add('21', 4); add('2', 3); break
+      case 'belly_fat':       add('17', 5); add('21', 3); add('2', 2); break
       case 'yo_yo':           add('17', 4); add('2', 3); add('18', 2); break
     }
-    // Q4 Weight Approach
     switch (answers.weightApproach) {
-      case 'dieting':      add('2', 3); add('3', 2); break
+      case 'dieting':      add('2', 3); add('18', 3); break
       case 'supplements':  add('17', 3); add('2', 3); break
-      case 'prescription': add('17', 4); add('2', 2); break
-      case 'none':         add('3', 5); add('18', 3); break
+      case 'prescription': add('17', 4); add('21', 4); add('2', 2); break
+      case 'none':         add('18', 5); add('2', 3); break
     }
-    // Q5 Weight Outcome
     switch (answers.weightOutcome) {
-      case 'lose_5_10':        add('3', 4); add('18', 2); break
+      case 'lose_5_10':        add('18', 4); add('2', 3); break
       case 'clothing_size':    add('2', 4); add('17', 3); break
-      case 'major_transform':  add('17', 6); add('2', 3); break
-      case 'stop_gaining':     add('18', 4); add('3', 3); break
+      case 'major_transform':  add('17', 5); add('21', 6); add('2', 2); break
+      case 'stop_gaining':     add('18', 4); add('2', 3); break
     }
   }
 
-  /* ═══════════ STRENGTH & RECOVERY ═══════════ */
+  /* ═══════════ STRENGTH & RECOVERY ═══════════
+     Products: BPC157 (8), TB500 (10), Wolverine (20)
+  */
   if (goal === 'strength_recovery') {
-    // Q1 Duration
     switch (answers.duration) {
       case 'just_starting': add('8', 4); break
       case 'few_months':    add('8', 3); add('10', 2); break
       case 'over_a_year':   add('20', 3); add('8', 2); break
       case 'years':         add('20', 5); break
     }
-    // Q2 Energy
     switch (answers.energy) {
       case 'afternoon_crash': add('10', 1); break
       case 'low_all_day':     add('20', 2); break
       case 'exhausted':       add('20', 3); break
     }
-    // Q3 Fitness Challenge
     switch (answers.fitnessChallenge) {
       case 'soreness':         add('10', 5); add('8', 3); break
       case 'plateau':          add('10', 4); add('8', 3); break
       case 'nagging_injury':   add('8', 5); add('20', 4); break
       case 'slower_recovery':  add('20', 4); add('10', 3); break
     }
-    // Q4 Activity Level
     switch (answers.activityLevel) {
       case '1_2_days':  add('8', 3); break
       case '3_4_days':  add('8', 3); add('10', 3); break
       case '5_6_days':  add('10', 4); add('20', 3); break
       case 'every_day': add('20', 5); add('10', 2); break
     }
-    // Q5 Fitness Outcome
     switch (answers.fitnessOutcome) {
       case 'pain_free':        add('8', 5); add('20', 3); break
       case 'break_plateaus':   add('10', 4); add('8', 3); break
@@ -107,36 +103,33 @@ function scoreFor(answers: QuizAnswers): Record<string, number> {
     }
   }
 
-  /* ═══════════ CELLULAR REPAIR & ANTI-AGING ═══════════ */
+  /* ═══════════ CELLULAR REPAIR & ANTI-AGING ═══════════
+     Products: Glow (6), GHKCU (4), MOTC (19), NAD 1000mg (7)
+  */
   if (goal === 'cellular_repair') {
-    // Q1 Duration
     switch (answers.duration) {
       case 'just_starting': add('4', 4); break
       case 'few_months':    add('4', 3); add('19', 2); break
       case 'over_a_year':   add('6', 3); add('7', 2); break
       case 'years':         add('6', 5); add('7', 2); break
     }
-    // Q2 Energy
     switch (answers.energy) {
       case 'afternoon_crash': add('19', 3); add('7', 2); break
       case 'low_all_day':     add('7', 4); add('19', 3); break
       case 'exhausted':       add('7', 5); add('19', 3); break
     }
-    // Q3 Aging Concern
     switch (answers.agingConcern) {
       case 'skin':            add('4', 5); add('6', 3); break
       case 'energy_mental':   add('19', 5); add('7', 4); break
       case 'joint_stiffness': add('6', 4); add('4', 3); break
       case 'all_of_it':       add('6', 6); add('7', 3); add('4', 2); break
     }
-    // Q4 Health Approach
     switch (answers.healthApproach) {
       case 'eat_exercise':  add('4', 3); add('19', 2); break
       case 'vitamins':      add('19', 3); add('7', 3); break
       case 'biohacking':    add('6', 4); add('7', 3); break
       case 'just_starting': add('4', 4); add('19', 3); break
     }
-    // Q5 Aging Outcome
     switch (answers.agingOutcome) {
       case 'skin_hair':         add('4', 5); add('6', 3); break
       case 'energy_clarity':    add('19', 5); add('7', 4); break

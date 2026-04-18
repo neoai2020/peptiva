@@ -45,7 +45,7 @@ const DEFAULT_USER: User = {
   email: 'alex@example.com',
   avatar: '',
   joinDate: new Date(Date.now() - 14 * 86400000).toISOString(),
-  compound: 'KLIKZEMPIC',
+  compound: 'Tirzepatide',
   plan: '3-month',
   profile: null,
 }

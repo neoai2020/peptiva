@@ -1,0 +1,57 @@
+PEPTIVA PRODUCT CATALOG — Apex Pharma Supply
+==============================================
+Last updated: 2026-04-18
+
+WEIGHT MANAGEMENT
+─────────────────
+1. Reta 20mg          RRP £129.99    Retatrutide (triple agonist: GLP-1 + GIP + Glucagon). Most aggressive metabolic compound. Targets appetite, energy expenditure, and glucose simultaneously.
+2. Reta 40mg          RRP £179.99    Same compound, higher dose for intermediate/advanced users.
+3. Reta 60mg          RRP £209.99    Same compound, maximum dose for advanced protocols.
+4. Reta 2.0           RRP £199.99    Next-generation retatrutide formulation — enhanced bioavailability for experienced users wanting maximum metabolic impact.
+5. Tirzepatide 20mg   RRP £129.99    Dual agonist (GLP-1 + GIP). Strong appetite control + insulin sensitivity. Most popular starting dose.
+6. Tirzepatide 40mg   RRP £179.99    Same compound, higher dose for continued protocols.
+7. Tirzepatide 60mg   RRP £209.99    Same compound, maximum dose.
+8. Cagrilintide        RRP £79.99    Amylin analogue. Satiety-first — amplifies fullness signalling rather than suppressing appetite. Gentle entry point.
+
+STRENGTH & RECOVERY
+───────────────────
+9.  Wolverine          RRP £119.99   BPC-157 + TB-500 synergistic repair stack. Covers both localised healing and systemic recovery.
+10. TB500              RRP £79.99    Thymosin Beta-4 fragment. Cellular migration, angiogenesis, systemic recovery. Best for training recovery and soreness.
+11. BPC157             RRP £79.99    Body Protection Compound. Tissue repair, gut lining, inflammation. Best for nagging injuries and chronic pain.
+
+CELLULAR REPAIR & ANTI-AGING
+────────────────────────────
+12. Glow               RRP £129.99   BPC-157 + TB-500 + GHK-Cu triple stack. Full regenerative blend — repair + recovery + collagen/skin renewal.
+13. GHKCU              RRP £99.99    Copper peptide (GHK-Cu). Collagen synthesis, skin firmness, extracellular matrix quality. The "visible results" peptide.
+14. MOTC               RRP £89.99    MOTS-C mitochondrial peptide. Cellular energy production, glucose utilisation, metabolic resilience. Real energy — not stimulants.
+15. NAD 1000mg         RRP £199.99   NAD+ coenzyme (2x 500mg pen box). Central to cellular energy, DNA repair, redox balance. Foundational anti-aging support.
+
+PRODUCTS NOT IN SUPPLY (REMOVED)
+────────────────────────────────
+- Semaglutide (was KLIKZEMPIC) — not stocked
+- HGH Fragment 176-191 (was KLIKFRAG) — not stocked
+
+QUIZ → PRODUCT MATCHING LOGIC
+──────────────────────────────
+Weight Management:
+  - Cravings / hunger-driven → Cagrilintide (satiety pathway)
+  - Balanced appetite + insulin → Tirzepatide (dual agonist)
+  - Stubborn / tried everything → Reta (triple agonist)
+  - Advanced / max intervention → Reta 2.0 (enhanced)
+
+Strength & Recovery:
+  - Nagging injury / chronic pain → BPC157 (targeted tissue repair)
+  - Training soreness / recovery → TB500 (systemic recovery)
+  - Multiple issues / both angles → Wolverine (BPC-157 + TB-500 stack)
+
+Cellular Repair & Anti-Aging:
+  - Skin / collagen / visible aging → GHKCU (copper peptide)
+  - Energy / fatigue / mitochondria → MOTC (MOTS-C)
+  - Sleep / brain fog / foundational → NAD 1000mg
+  - Full renewal (skin + recovery) → Glow (triple stack)
+
+DOSE RECOMMENDATIONS (Reta & Tirzepatide)
+──────────────────────────────────────────
+  Beginner / just starting → 20mg
+  Intermediate / few months → 40mg
+  Advanced / over a year   → 60mg

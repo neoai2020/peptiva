@@ -1116,11 +1116,11 @@ h1, h2, h3 {
   --tsl-line: #e4e9f0;
   --tsl-surface: #f6f8fb;
   --tsl-paper: #ffffff;
-  --tsl-cta: #15803d;
-  --tsl-cta-hover: #166534;
+  --tsl-cta: #1e5a9e;
+  --tsl-cta-hover: #164785;
   --tsl-cta-ink: #ffffff;
-  --tsl-accent: #0f766e;
-  --tsl-wash: #ecfdf5;
+  --tsl-accent: #1a6fbf;
+  --tsl-wash: #e3f0ff;
   --tsl-star: #ca8a04;
   --tsl-shadow: 0 22px 55px rgba(15, 23, 42, 0.07);
   --tsl-shadow-sm: 0 10px 30px rgba(15, 23, 42, 0.06);
@@ -2671,17 +2671,17 @@ h1, h2, h3 {
 
 /* ── Palette ── */
 .fp {
-  --fp-olive: #3c3f2e;
-  --fp-olive-soft: #4a4d3a;
-  --fp-cream: #f5f0e8;
-  --fp-cream-dark: #ebe5d9;
+  --fp-olive: #1e3a5f;
+  --fp-olive-soft: #2a4a72;
+  --fp-cream: #e8f0f8;
+  --fp-cream-dark: #d9e5f0;
   --fp-white: #ffffff;
   --fp-text: #1a1a1a;
   --fp-text-soft: #555;
   --fp-text-muted: #888;
-  --fp-green: #3c6e47;
-  --fp-green-light: #e8f5e9;
-  --fp-green-save: #2e7d32;
+  --fp-green: #1e5a9e;
+  --fp-green-light: #e3f0ff;
+  --fp-green-save: #1565c0;
   --fp-border: #e5e5e5;
   --fp-shadow: 0 2px 16px rgba(0,0,0,0.06);
   --fp-radius: 16px;
@@ -2881,17 +2881,24 @@ h1, h2, h3 {
   gap: 0.65rem;
 }
 .fp-hero-advantages li {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 20px 1fr;
   gap: 0.6rem;
   font-size: 0.92rem;
   color: var(--fp-text);
-  line-height: 1.4;
+  line-height: 1.5;
+  align-items: baseline;
 }
 .fp-hero-advantages .fp-check {
   color: var(--fp-green);
   flex-shrink: 0;
-  margin-top: 1px;
+  width: 20px;
+  height: 20px;
+  align-self: start;
+  margin-top: 2px;
+}
+.fp-hero-cta-btn {
+  margin-top: 1.5rem;
 }
 .fp-hero-visual {
   display: flex;
@@ -3012,7 +3019,7 @@ h1, h2, h3 {
 .fp-plan:hover { box-shadow: var(--fp-shadow); }
 .fp-plan--primary {
   border-color: var(--fp-green);
-  box-shadow: 0 4px 24px rgba(60,110,71,0.12);
+  box-shadow: 0 4px 24px rgba(30,58,95,0.12);
 }
 .fp-plan-ribbon {
   position: absolute;
@@ -3102,6 +3109,35 @@ h1, h2, h3 {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
+}
+.fp-dose-selector {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.fp-dose-btn {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  font-family: var(--fp-font);
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: 2px solid var(--fp-border);
+  border-radius: 10px;
+  background: var(--fp-white);
+  color: var(--fp-text-soft);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.fp-dose-btn:hover { border-color: var(--fp-green); color: var(--fp-text); }
+.fp-dose-btn--active {
+  border-color: var(--fp-green);
+  background: var(--fp-green-light);
+  color: var(--fp-green);
+}
+.fp-plan-dose-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--fp-text-muted);
 }
 .fp-plan-cta {
   width: 100%;
@@ -3194,6 +3230,61 @@ h1, h2, h3 {
 .fp-stories {
   padding: 5rem 0;
   background: var(--fp-white);
+}
+.fp-ba-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin: 2rem 0 3rem;
+}
+@media (max-width: 900px) { .fp-ba-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .fp-ba-grid { grid-template-columns: 1fr; } }
+.fp-ba-card {
+  background: var(--fp-cream);
+  border: 1px solid var(--fp-cream-dark);
+  border-radius: var(--fp-radius);
+  padding: 0.75rem;
+  text-align: center;
+}
+.fp-ba-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.fp-ba-img {
+  aspect-ratio: 3/4;
+  border-radius: 10px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 0.5rem;
+}
+.fp-ba-img span {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fp-white);
+  background: rgba(0,0,0,0.45);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+}
+.fp-ba-img--before {
+  background: linear-gradient(135deg, #ccd5e0, #b0bcc8);
+}
+.fp-ba-img--after {
+  background: linear-gradient(135deg, var(--fp-green), var(--fp-olive));
+}
+.fp-ba-caption {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--fp-text);
+  margin: 0 0 0.25rem;
+}
+.fp-ba-name {
+  font-size: 0.72rem;
+  color: var(--fp-text-muted);
 }
 .fp-stories-img {
   margin: 2rem 0 3rem;

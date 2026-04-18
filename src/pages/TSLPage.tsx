@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { PEPTIDES, type Peptide } from '../data/peptides'
+import { PEPTIDES, type Peptide, getBasePrice, recommendedDoseIndex } from '../data/peptides'
 import { recommendPeptides } from '../lib/recommend'
 import { benefitHeadline, getExperienceLevel, goalLabel, pillarDetailSummary } from '../lib/quizLabels'
 import { loadQuiz } from '../lib/quizStorage'
@@ -9,13 +9,10 @@ import { getCompoundCopy } from '../lib/compoundCopy'
 
 const SHOP_URL = '#pricing'
 
-const FROM_GBP: Record<string, number> = {
-  '17': 129, '2': 119, '3': 99, '18': 89, '1': 79,
-  '8': 79, '10': 79, '20': 109,
-  '6': 139, '4': 69, '19': 99, '7': 89,
+function fromGbp(p: Peptide, level: 'beginner' | 'intermediate' | 'advanced' = 'intermediate') {
+  const idx = recommendedDoseIndex(p, level)
+  return p.doses[idx]?.price ?? getBasePrice(p)
 }
-
-function fromGbp(id: string) { return FROM_GBP[id] ?? 99 }
 
 function Star() {
   return (
@@ -29,10 +26,10 @@ function Stars() {
   return <span className="tsl-stars">{Array.from({ length: 5 }).map((_, i) => <Star key={i} />)}</span>
 }
 
-function PricingCards({ primary, secondary, isBeginner }: { primary: Peptide; secondary: Peptide | null; isBeginner: boolean }) {
+function PricingCards({ primary, secondary, isBeginner, level }: { primary: Peptide; secondary: Peptide | null; isBeginner: boolean; level: 'beginner' | 'intermediate' | 'advanced' }) {
   const products = secondary ? [primary, secondary] : [primary]
-  const p1 = fromGbp(primary.id)
-  const p2 = secondary ? fromGbp(secondary.id) : null
+  const p1 = fromGbp(primary, level)
+  const p2 = secondary ? fromGbp(secondary, level) : null
 
   return (
     <div className="tsl-offer-grid">
@@ -74,7 +71,7 @@ function PricingCards({ primary, secondary, isBeginner }: { primary: Peptide; se
         <p className="tsl-offer-price">
           <span className="tsl-offer-price-from">From</span>
           <span className="tsl-offer-price-num">£{p1}</span>
-          <span className="tsl-offer-price-unit">/ month · quiz rate</span>
+          <span className="tsl-offer-price-unit">one-time · quiz rate</span>
         </p>
         <ul className="tsl-offer-list">
           <li>👨‍⚕️ Practitioner support included</li>
@@ -93,7 +90,7 @@ function PricingCards({ primary, secondary, isBeginner }: { primary: Peptide; se
           <p className="tsl-offer-price">
             <span className="tsl-offer-price-from">From</span>
             <span className="tsl-offer-price-num">£{p2}</span>
-            <span className="tsl-offer-price-unit">/ month · quiz rate</span>
+            <span className="tsl-offer-price-unit">one-time · quiz rate</span>
           </p>
           <ul className="tsl-offer-list">
             <li>👨‍⚕️ Same practitioner support</li>
@@ -236,7 +233,7 @@ export default function TSLPage() {
                 }
               </ul>
               <a className="tsl-cta tsl-cta--solid tsl-cta--large" href="#pricing">
-                Get {primary.sku} — From £{fromGbp(primary.id)}/mo
+                Get {primary.sku} — From £{fromGbp(primary, level)}
               </a>
             </div>
             <div className="tsl-hero-aside" aria-hidden>
@@ -348,7 +345,7 @@ export default function TSLPage() {
               : 'Quiz-taker pricing · Practitioner support included · Free UK shipping · 30-day guarantee'
             }
           </p>
-          <PricingCards primary={primary} secondary={secondary} isBeginner={isBeginner} />
+          <PricingCards primary={primary} secondary={secondary} isBeginner={isBeginner} level={level} />
         </div>
       </section>
 
@@ -541,7 +538,7 @@ export default function TSLPage() {
       <section className="tsl-block tsl-block--muted" id="pricing-bottom">
         <div className="tsl-wrap">
           <h2 className="tsl-h2">{isBeginner ? 'Ready to start your journey?' : 'Ready to order?'}</h2>
-          <PricingCards primary={primary} secondary={secondary} isBeginner={isBeginner} />
+          <PricingCards primary={primary} secondary={secondary} isBeginner={isBeginner} level={level} />
         </div>
       </section>
 
@@ -560,7 +557,7 @@ export default function TSLPage() {
       {/* ── STICKY BAR ── */}
       <div className="tsl-sticky">
         <div className="tsl-sticky-inner">
-          <span>Your match: <strong>{primary.sku}</strong> — £{fromGbp(primary.id)}/mo</span>
+          <span>Your match: <strong>{primary.sku}</strong> — from £{fromGbp(primary, level)}</span>
           <a href={SHOP_URL} className="tsl-cta tsl-cta--solid tsl-cta--small">Get Started</a>
         </div>
       </div>

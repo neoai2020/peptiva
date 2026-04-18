@@ -109,7 +109,7 @@ export function benefitHeadline(a: QuizAnswers): string {
 
 /** Short benefit descriptor for the hero subheadline. */
 export function benefitSubline(_a: QuizAnswers, sku: string, price: number): string {
-  return `Your #1 match: ${sku} — now just £${price}/mo with quiz-taker pricing`
+  return `Your #1 match: ${sku} — now just £${price} with quiz-taker pricing`
 }
 
 export function subFocusSummary(a: QuizAnswers): string | null {
