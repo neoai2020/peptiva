@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PEPTIDES, type Peptide, recommendedDoseIndex } from '../data/peptides'
 import { recommendPeptides } from '../lib/recommend'
-import { benefitHeadline, benefitSubline, getExperienceLevel, pillarDetailSummary, goalLabel } from '../lib/quizLabels'
+import { benefitHeadline, benefitSubline, getExperienceLevel, pillarDetailSummary } from '../lib/quizLabels'
 import { loadQuiz } from '../lib/quizStorage'
 import { defaultQuizAnswers } from '../types/quiz'
 import { getCompoundCopy } from '../lib/compoundCopy'
@@ -28,7 +28,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 
 function CheckIcon() {
   return (
-    <svg className="fp-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    <svg className="fp-check" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
   )
 }
 
@@ -38,6 +38,12 @@ function StarIcon() {
 
 function Stars({ count = 5 }: { count?: number }) {
   return <span className="fp-stars">{Array.from({ length: count }).map((_, i) => <StarIcon key={i} />)}</span>
+}
+
+function ShieldIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  )
 }
 
 export default function ResultsPage() {
@@ -60,7 +66,6 @@ export default function ResultsPage() {
   const level = getExperienceLevel(merged)
   const isBeginner = level === 'beginner'
   const detail = pillarDetailSummary(merged)
-  const goal = merged.goal ? goalLabel(merged.goal) : 'your priorities'
   const name = merged.lead?.firstName || 'there'
   const primaryPrice = getPrice(primary, level)
   const copy = getCompoundCopy(primary.id, level)
@@ -73,7 +78,7 @@ export default function ResultsPage() {
       {/* ── PROMO BAR ── */}
       <div className="fp-promo">
         <span className="fp-promo-inner">
-          <strong>QUIZ-TAKER PRICING:</strong> Exclusive rates today. Free UK shipping. A practitioner reviews your protocol.
+          🔥 <strong>QUIZ-TAKER EXCLUSIVE:</strong> Your personalised match + practitioner support + free UK shipping — locked in now.
         </span>
       </div>
 
@@ -107,17 +112,21 @@ export default function ResultsPage() {
           <div className="fp-hero-grid">
             <div className="fp-hero-content">
               <ul className="fp-hero-advantages">
-                <li><CheckIcon /> Your match: <strong>{primary.sku}</strong> — from £{primaryPrice.now}</li>
-                <li><CheckIcon /> 99.3%+ verified purity</li>
-                <li><CheckIcon /> Practitioner support included</li>
+                <li><CheckIcon /> Targets your specific {detail.toLowerCase().split(',')[0]}</li>
+                <li><CheckIcon /> See real changes within 2–4 weeks</li>
+                <li><CheckIcon /> A practitioner personalises your protocol</li>
                 {isBeginner
-                  ? <li><CheckIcon /> Beginner-friendly with full guidance</li>
-                  : <li><CheckIcon /> Full batch documentation</li>
+                  ? <li><CheckIcon /> Safe, beginner-friendly — you're guided every step</li>
+                  : <li><CheckIcon /> Full batch documentation with QR verification</li>
                 }
-                <li><CheckIcon /> 30-day quality guarantee</li>
-                <li><CheckIcon /> Free tracked UK shipping</li>
+                <li><CheckIcon /> 30-day guarantee — zero risk to try</li>
+                <li><CheckIcon /> Free tracked delivery to your door</li>
               </ul>
               <a href="#plans" className="fp-btn fp-hero-cta-btn">Claim My Match — £{primaryPrice.now}</a>
+              <div className="fp-hero-guarantee">
+                <ShieldIcon />
+                <span>99.3%+ verified purity · UK-regulated lab · Third-party tested</span>
+              </div>
             </div>
             <div className="fp-hero-visual">
               <div className="fp-hero-img-card">
@@ -128,26 +137,27 @@ export default function ResultsPage() {
         </div>
       </section>
 
-      {/* ── SAFETY BAR ── */}
-      <section className="fp-trust">
-        <div className="fp-container">
-          <h2 className="fp-trust-title">
-            {isBeginner ? 'Your safety is our #1 priority' : 'Pharmaceutical-grade. Practitioner-backed. UK regulated.'}
-          </h2>
-          <p className="fp-trust-sub">
-            {isBeginner
-              ? 'New to this? That\'s exactly who we built Peptiva for. Every order comes with practitioner guidance, clear dosing instructions, and a 30-day quality guarantee.'
-              : 'One transparent price. Everything included. No hidden fees, no memberships, no surprises.'
-            }
-          </p>
-          <div className="fp-trust-tags">
-            <span>🔬 Third-party lab tested</span>
-            <span>👨‍⚕️ Practitioner reviewed</span>
-            <span>🇬🇧 UK regulated lab</span>
-            <span>🛡️ 30-day guarantee</span>
+      {/* ── SOCIAL PROOF COUNTER ── */}
+      <div className="fp-social-bar">
+        <div className="fp-container fp-social-bar-inner">
+          <div className="fp-social-stat">
+            <strong>4,700+</strong>
+            <span>UK orders shipped</span>
+          </div>
+          <div className="fp-social-stat">
+            <strong>92%</strong>
+            <span>see results in 30 days</span>
+          </div>
+          <div className="fp-social-stat">
+            <strong>4.8/5</strong>
+            <span>average rating</span>
+          </div>
+          <div className="fp-social-stat">
+            <strong>2–3 days</strong>
+            <span>free UK delivery</span>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* ── WHY THIS MATCH ── */}
       <section className="fp-why">
@@ -178,17 +188,43 @@ export default function ResultsPage() {
         </div>
       </section>
 
-      {/* ── SIGNATURE PLANS ── */}
+      {/* ── WHAT'S INCLUDED ── */}
+      <section className="fp-included">
+        <div className="fp-container">
+          <h2 className="fp-section-title">Everything included with your order</h2>
+          <div className="fp-included-grid">
+            <div className="fp-included-item">
+              <span className="fp-included-icon">💊</span>
+              <h3>Your matched {primary.sku}</h3>
+              <p>Pharmaceutical-grade, UK-manufactured, batch-tested</p>
+            </div>
+            <div className="fp-included-item">
+              <span className="fp-included-icon">👨‍⚕️</span>
+              <h3>Practitioner support</h3>
+              <p>A real person reviews your profile and guides your dosing</p>
+            </div>
+            <div className="fp-included-item">
+              <span className="fp-included-icon">📋</span>
+              <h3>Personalised protocol</h3>
+              <p>Dosing schedule tailored to your experience and goals</p>
+            </div>
+            <div className="fp-included-item">
+              <span className="fp-included-icon">🚚</span>
+              <h3>Free tracked shipping</h3>
+              <p>Discreet packaging, 2–3 business days UK-wide</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── YOUR PLAN ── */}
       <section className="fp-plans" id="plans">
         <div className="fp-container">
           <h2 className="fp-section-title">
-            {isBeginner ? 'Everything you need to get started' : 'Choose your plan'}
+            {isBeginner ? 'Get started today — everything included' : 'Your matched protocol'}
           </h2>
           <p className="fp-section-sub">
-            {isBeginner
-              ? 'Your matched product + practitioner support + dosing guide + batch documentation. All included.'
-              : `Product + Concierge + Documentation. No memberships. Category: ${goal}.`
-            }
+            One price. No memberships. No hidden fees. Practitioner support included free.
           </p>
 
           <div className="fp-plans-grid fp-plans-grid--single">
@@ -201,6 +237,7 @@ export default function ResultsPage() {
       <section className="fp-stories" id="reviews">
         <div className="fp-container">
           <h2 className="fp-section-title">Real people. Real results.</h2>
+          <p className="fp-section-sub">Quiz-matched customers across the UK sharing their experience</p>
           <div className="fp-ba-hero">
             <img src="/images/success-transformations.png" alt="Before and after transformation results from real customers" />
           </div>
@@ -208,12 +245,8 @@ export default function ResultsPage() {
             {[
               { text: "I was sceptical — another quiz, another product. But this actually matched what I needed. Saw real changes in 2 weeks. The practitioner check-in sealed it for me.", name: "James T.", loc: "Manchester", stars: 5 },
               { text: "Down a full clothing size in 6 weeks. My energy is through the roof. Wish I'd found this sooner instead of wasting money on supplements that didn't work.", name: "Sarah L.", loc: "London", stars: 5 },
-              { text: "I've used peptides for years. Peptiva's algorithm matched exactly what I would have picked myself. Save yourself months of research.", name: "Tom K.", loc: "Edinburgh", stars: 5 },
-              { text: "My knee had been killing me for 2 years. The match was spot on — I'm back to training 4 days a week. Life-changing.", name: "Chris W.", loc: "Leeds", stars: 5 },
-              { text: "Arrived in 3 days, discreet packaging. The practitioner check-in was reassuring. Already reordered for my second month.", name: "Rachel M.", loc: "Cardiff", stars: 5 },
               { text: "Completely new to peptides. Peptiva made it simple — clear quiz, clear match, clear instructions. Feeling great after just 3 weeks.", name: "Emily R.", loc: "Bristol", stars: 5 },
-              { text: "The quiz nailed it. I was torn between three products for weeks — Peptiva matched me in under a minute. Couldn't be happier.", name: "Marcus W.", loc: "Leeds", stars: 5 },
-              { text: "First time a recommendation actually matched how I live. Two weeks in and I stopped second-guessing. Brilliant service.", name: "Daniel R.", loc: "Birmingham", stars: 5 },
+              { text: "My knee had been killing me for 2 years. The match was spot on — I'm back to training 4 days a week. Life-changing.", name: "Chris W.", loc: "Leeds", stars: 5 },
             ].map((r, i) => (
               <div key={i} className="fp-review-card">
                 <Stars count={r.stars} />
@@ -235,22 +268,22 @@ export default function ResultsPage() {
             <div className="fp-how-step">
               <span className="fp-how-num">01</span>
               <h3>Take the Quiz</h3>
-              <p>60 seconds. Your answers are scored against {PEPTIDES.length} research-grade products to find your best match.</p>
+              <p>60 seconds. Your answers are scored against {PEPTIDES.length} research-grade products.</p>
             </div>
             <div className="fp-how-step">
               <span className="fp-how-num">02</span>
               <h3>Get Your Match</h3>
-              <p>Our algorithm identifies the product that best fits your specific goals, challenges, and experience level.</p>
+              <p>Our algorithm finds the product that fits your specific goals and challenges.</p>
             </div>
             <div className="fp-how-step">
               <span className="fp-how-num">03</span>
-              <h3>A Practitioner Reviews It</h3>
-              <p>A real practitioner reviews your profile and personalises your dosing protocol. Included free with every order.</p>
+              <h3>Practitioner Reviews It</h3>
+              <p>A real practitioner personalises your dosing protocol. Free with every order.</p>
             </div>
             <div className="fp-how-step">
               <span className="fp-how-num">04</span>
               <h3>See the Difference</h3>
-              <p>92% of quiz-matched customers report results within 30 days. Your practitioner checks in to track progress.</p>
+              <p>92% report results within 30 days. Your practitioner checks in to track progress.</p>
             </div>
           </div>
         </div>
@@ -260,7 +293,7 @@ export default function ResultsPage() {
       <section className="fp-quality">
         <div className="fp-container">
           <div className="fp-quality-box">
-            <h2>Your Safety &amp; Quality Promise</h2>
+            <h2>Our Purity &amp; Quality Guarantee</h2>
             <p>
               {isBeginner
                 ? 'We know this might be new for you — so we\'ve built every safety measure in. Your product is made in a UK-regulated lab, tested by an independent third party, and reviewed by a practitioner before it reaches you. If anything doesn\'t meet your expectations, our 30-day guarantee has you covered.'
@@ -337,7 +370,6 @@ export default function ResultsPage() {
             )}
             <FaqItem q="What exactly are peptides?" a="Peptides are short chains of amino acids — the same building blocks your body already uses. They act as signalling molecules, telling your cells to perform specific functions like burn fat, repair tissue, or boost collagen. Think of them as precise instructions your body already understands." />
             <FaqItem q="What's included with my order?" a="Your matched product, personalised dosing guide from a practitioner, batch certificate with QR verification, Peptiva Concierge access (practitioner support), and free tracked UK shipping in discreet packaging." />
-            <FaqItem q="What is Peptiva Concierge?" a="It's our practitioner support programme — included free with every order. A certified practitioner reviews your quiz profile, personalises your dosing, checks in on your progress, and answers your questions. Like having a personal guide throughout your journey." />
             <FaqItem q="How fast will I see results?" a="Most customers notice changes within 2–4 weeks. 92% of quiz-matched customers report measurable results within 30 days. Your practitioner will check in to make sure you're on track." />
             <FaqItem q="What if it doesn't work for me?" a="We offer a 30-day quality guarantee. If your product doesn't meet specification or you're not satisfied with the quality, we make it right — no questions asked. You can also retake the quiz anytime." />
             <FaqItem q="Is this legal in the UK?" a="Yes. All Peptiva products are manufactured in our UK-regulated laboratory. We comply fully with UK regulations and include full documentation with every order." />
@@ -345,22 +377,24 @@ export default function ResultsPage() {
         </div>
       </section>
 
-      {/* ── CTA BANNER ── */}
+      {/* ── URGENCY CTA BANNER ── */}
       <section className="fp-cta-section">
         <div className="fp-container">
           <h2>
             {isBeginner
-              ? 'Ready to start? Your match, your practitioner, your results.'
-              : `Your match is locked in. Claim quiz-taker pricing before it expires.`
+              ? `${name !== 'there' ? name + ', your' : 'Your'} match is ready. Don't let it expire.`
+              : `Your match is locked in. Claim it before quiz-taker pricing ends.`
             }
           </h2>
           <p>
-            {isBeginner
-              ? `${primary.sku} + Practitioner guidance + Dosing protocol + 30-day guarantee. Everything you need for £${primaryPrice.now}.`
-              : `${primary.sku} + Concierge support + Full documentation. No memberships. Free UK shipping.`
-            }
+            {primary.sku} + Practitioner guidance + Dosing protocol + 30-day guarantee. Everything you need for £{primaryPrice.now}.
           </p>
-          <a href="#plans" className="fp-btn fp-btn--light">Claim My Match — £{primaryPrice.now}</a>
+          <a href="#plans" className="fp-btn fp-btn--light fp-btn--large">Get {primary.sku} Now — £{primaryPrice.now}</a>
+          <div className="fp-cta-trust">
+            <span>🔒 Secure checkout</span>
+            <span>🛡️ 30-day guarantee</span>
+            <span>🚚 Free UK shipping</span>
+          </div>
         </div>
       </section>
 
@@ -444,8 +478,12 @@ function PlanCard({ peptide, rank, isBeginner, level }: { peptide: Peptide; rank
           <div><CheckIcon /> 30-day quality guarantee</div>
         </div>
         <a href="#plans" className="fp-btn fp-plan-cta">
-          {rank === 1 ? `Get ${peptide.sku} — £${dose.price}` : `Add ${peptide.sku}`}
+          Get {peptide.sku} Now — £{dose.price}
         </a>
+        <div className="fp-plan-guarantee">
+          <ShieldIcon />
+          <span>99.3%+ purity guaranteed · UK-regulated · Third-party lab tested</span>
+        </div>
       </div>
     </div>
   )
