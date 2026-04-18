@@ -56,7 +56,7 @@ export default function ResultsPage() {
   }
 
   const merged = { ...defaultQuizAnswers(), ...answers }
-  const { primary, secondary } = rec
+  const { primary } = rec
   const level = getExperienceLevel(merged)
   const isBeginner = level === 'beginner'
   const detail = pillarDetailSummary(merged)
@@ -92,8 +92,8 @@ export default function ResultsPage() {
 
       {/* ── HERO ── */}
       <section className="fp-hero">
-        <div className="fp-container fp-hero-grid">
-          <div className="fp-hero-content">
+        <div className="fp-container">
+          <div className="fp-hero-center">
             <p className="fp-hero-eyebrow">YOUR PERSONALISED MATCH IS READY</p>
             <h1 className="fp-hero-title">{headline}</h1>
             <h2 className="fp-hero-subtitle">{subline}</h2>
@@ -103,22 +103,22 @@ export default function ResultsPage() {
                 ? ' This is a safe, well-studied option with practitioner guidance included at no extra cost.'
                 : ' Quiz-taker pricing locked in — practitioner support included.'}
             </p>
-
-            <ul className="fp-hero-advantages">
-              <li><CheckIcon /> <strong>Your match: {primary.sku}</strong> — from £{primaryPrice.now}</li>
-              <li><CheckIcon /> <strong>99.3%+ verified purity</strong> — independently lab tested</li>
-              <li><CheckIcon /> <strong>Practitioner support included</strong> — a real person guides your protocol</li>
-              {isBeginner
-                ? <li><CheckIcon /> <strong>Beginner-friendly</strong> — clear instructions, gentle start, full support</li>
-                : <li><CheckIcon /> <strong>Full batch documentation</strong> — QR-verified, traceable, auditable</li>
-              }
-              <li><CheckIcon /> <strong>30-day quality guarantee</strong> — not happy? We make it right</li>
-            </ul>
-
-            <a href="#plans" className="fp-btn fp-hero-cta-btn">Claim My Match — £{primaryPrice.now}</a>
           </div>
-          <div className="fp-hero-visual">
-            <div className="fp-hero-img-pair">
+          <div className="fp-hero-grid">
+            <div className="fp-hero-content">
+              <ul className="fp-hero-advantages">
+                <li><CheckIcon /> <strong>Your match: {primary.sku}</strong> — from £{primaryPrice.now}</li>
+                <li><CheckIcon /> <strong>99.3%+ verified purity</strong> — independently lab tested</li>
+                <li><CheckIcon /> <strong>Practitioner support included</strong> — a real person guides your protocol</li>
+                {isBeginner
+                  ? <li><CheckIcon /> <strong>Beginner-friendly</strong> — clear instructions, gentle start, full support</li>
+                  : <li><CheckIcon /> <strong>Full batch documentation</strong> — QR-verified, traceable, auditable</li>
+                }
+                <li><CheckIcon /> <strong>30-day quality guarantee</strong> — not happy? We make it right</li>
+              </ul>
+              <a href="#plans" className="fp-btn fp-hero-cta-btn">Claim My Match — £{primaryPrice.now}</a>
+            </div>
+            <div className="fp-hero-visual">
               <div className="fp-hero-img-card">
                 {primary.image && <img src={primary.image} alt={primary.sku} className="fp-hero-photo" />}
               </div>
@@ -190,22 +190,9 @@ export default function ResultsPage() {
             }
           </p>
 
-          <div className="fp-plans-grid">
+          <div className="fp-plans-grid fp-plans-grid--single">
             <PlanCard peptide={primary} rank={1} isBeginner={isBeginner} level={level} />
-            {secondary && <PlanCard peptide={secondary} rank={2} isBeginner={isBeginner} level={level} />}
           </div>
-
-          {secondary && (
-            <div className="fp-stack-banner">
-              <div className="fp-stack-inner">
-                <div>
-                  <h3>Get even better results with both</h3>
-                  <p>These two work through different pathways — complementary, not overlapping. Together, they deliver compounding results.</p>
-                </div>
-                <a href="#plans" className="fp-btn fp-btn--outline">View Stack Pricing</a>
-              </div>
-            </div>
-          )}
         </div>
       </section>
 
@@ -213,26 +200,8 @@ export default function ResultsPage() {
       <section className="fp-stories" id="reviews">
         <div className="fp-container">
           <h2 className="fp-section-title">Real people. Real results.</h2>
-          <div className="fp-ba-grid">
-            {[
-              { name: 'James T.', loc: 'Manchester', weeks: 4, caption: 'Visible change in 4 weeks' },
-              { name: 'Sarah L.', loc: 'London', weeks: 6, caption: 'Down a clothing size in 6 weeks' },
-              { name: 'Chris W.', loc: 'Leeds', weeks: 3, caption: 'Back to training in 3 weeks' },
-              { name: 'Emily R.', loc: 'Bristol', weeks: 5, caption: 'Noticeable results by week 5' },
-              { name: 'Tom K.', loc: 'Edinburgh', weeks: 4, caption: 'Measurable progress in 4 weeks' },
-              { name: 'Rachel M.', loc: 'Cardiff', weeks: 6, caption: 'Significant change at 6 weeks' },
-              { name: 'Daniel R.', loc: 'Birmingham', weeks: 3, caption: 'Clear difference by week 3' },
-              { name: 'Marcus W.', loc: 'Leeds', weeks: 5, caption: 'Real results within 5 weeks' },
-            ].map((t, i) => (
-              <div key={i} className="fp-ba-card">
-                <div className="fp-ba-pair">
-                  <div className="fp-ba-img fp-ba-img--before"><span>Before</span></div>
-                  <div className="fp-ba-img fp-ba-img--after"><span>After · {t.weeks} wks</span></div>
-                </div>
-                <p className="fp-ba-caption">{t.caption}</p>
-                <span className="fp-ba-name">{t.name} — {t.loc}</span>
-              </div>
-            ))}
+          <div className="fp-ba-hero">
+            <img src="/images/success-transformations.png" alt="Before and after transformation results from real customers" />
           </div>
           <div className="fp-reviews-grid">
             {[
@@ -461,6 +430,7 @@ function PlanCard({ peptide, rank, isBeginner, level }: { peptide: Peptide; rank
           <span className="fp-plan-now">£{dose.price}</span>
           {peptide.doses.length > 1 && <span className="fp-plan-dose-label">{dose.label}</span>}
         </div>
+        <p className="fp-plan-desc">{peptide.description}</p>
         <div className="fp-plan-features">
           <div><CheckIcon /> Practitioner support included (£0)</div>
           <div><CheckIcon /> 99.3%+ verified purity</div>
