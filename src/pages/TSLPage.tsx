@@ -1,564 +1,604 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PEPTIDES, type Peptide, getBasePrice, recommendedDoseIndex } from '../data/peptides'
 import { recommendPeptides } from '../lib/recommend'
-import { benefitHeadline, getExperienceLevel, goalLabel, pillarDetailSummary } from '../lib/quizLabels'
-import { loadQuiz } from '../lib/quizStorage'
+import {
+  benefitHeadline,
+  durationLabel,
+  energyLabel,
+  getExperienceLevel,
+  goalLabel,
+  pillarDetailSummary,
+  subFocusSummary,
+} from '../lib/quizLabels'
+import { getQuizCompletedAt, loadQuiz } from '../lib/quizStorage'
 import { defaultQuizAnswers } from '../types/quiz'
-import { getCompoundCopy } from '../lib/compoundCopy'
+import { getAnswerReasons, getCompoundCopy, type AnswerReason } from '../lib/compoundCopy'
 
-const SHOP_URL = '#pricing'
+const PILLAR_CATEGORY: Record<string, string> = {
+  weight_management: 'Weight management',
+  strength_recovery: 'Strength & recovery',
+  cellular_repair: 'Cellular repair & anti-aging',
+}
+
+const EXPIRY_MS = 24 * 60 * 60 * 1000
+
+function getCheckoutUrl(p: Peptide): string {
+  return p.catalogUrl || 'https://www.apexpharma.io/products'
+}
 
 function fromGbp(p: Peptide, level: 'beginner' | 'intermediate' | 'advanced' = 'intermediate') {
   const idx = recommendedDoseIndex(p, level)
   return p.doses[idx]?.price ?? getBasePrice(p)
 }
 
-function Star() {
+/* ── Intersection Observer hook for scroll animations ── */
+function useReveal<T extends HTMLElement>(): [React.RefObject<T | null>, boolean] {
+  const ref = useRef<T | null>(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect() } },
+      { threshold: 0.15 },
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+  return [ref, visible]
+}
+
+/* ── Countdown timer ── */
+function CountdownTimer({ completedAt }: { completedAt: number | null }) {
+  const calcRemaining = useCallback(() => {
+    if (!completedAt) return 0
+    return Math.max(0, completedAt + EXPIRY_MS - Date.now())
+  }, [completedAt])
+
+  const [remaining, setRemaining] = useState(calcRemaining)
+
+  useEffect(() => {
+    const id = setInterval(() => setRemaining(calcRemaining()), 1000)
+    return () => clearInterval(id)
+  }, [calcRemaining])
+
+  if (!completedAt || remaining <= 0) {
+    return <span className="tsl-timer tsl-timer--expired">Quiz rate expired — <Link to="/">retake quiz</Link></span>
+  }
+
+  const h = Math.floor(remaining / 3_600_000)
+  const m = Math.floor((remaining % 3_600_000) / 60_000)
+  const s = Math.floor((remaining % 60_000) / 1000)
+  const pad = (n: number) => String(n).padStart(2, '0')
+
   return (
-    <svg className="tsl-star" width="18" height="18" viewBox="0 0 24 24" aria-hidden>
-      <path fill="currentColor" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" />
-    </svg>
+    <span className="tsl-timer">
+      Quiz-rate pricing expires in <strong>{pad(h)}:{pad(m)}:{pad(s)}</strong>
+    </span>
   )
 }
 
-function Stars() {
-  return <span className="tsl-stars">{Array.from({ length: 5 }).map((_, i) => <Star key={i} />)}</span>
-}
-
-function PricingCards({ primary, secondary, isBeginner, level }: { primary: Peptide; secondary: Peptide | null; isBeginner: boolean; level: 'beginner' | 'intermediate' | 'advanced' }) {
-  const products = secondary ? [primary, secondary] : [primary]
-  const p1 = fromGbp(primary, level)
-  const p2 = secondary ? fromGbp(secondary, level) : null
+/* ── Profile card ── */
+function ProfileCard({
+  goal, challenge, energy, duration, outcome, level,
+}: {
+  goal: string; challenge: string; energy: string; duration: string; outcome: string | null; level: string
+}) {
+  const [ref, visible] = useReveal<HTMLDivElement>()
+  const items = [
+    { icon: '🎯', label: 'Goal', value: goal },
+    { icon: '⚡', label: 'Main challenge', value: challenge },
+    { icon: '🔋', label: 'Energy', value: energy },
+    { icon: '⏳', label: 'Duration', value: duration },
+    ...(outcome ? [{ icon: '🏁', label: '90-day target', value: outcome }] : []),
+    { icon: '📊', label: 'Experience', value: level.charAt(0).toUpperCase() + level.slice(1) },
+  ]
 
   return (
-    <div className="tsl-offer-grid">
-      {products.length === 2 && (
-        <article className="tsl-offer tsl-offer--featured">
-          <div className="tsl-offer-ribbon">Best value</div>
-          <div className="tsl-offer-media">
-            <img src={primary.image || ''} alt="" className="tsl-offer-img" />
-            <img src={secondary!.image || ''} alt="" className="tsl-offer-img tsl-offer-img--second" />
+    <div ref={ref} className={`tsl-profile ${visible ? 'is-visible' : ''}`}>
+      <h2 className="tsl-profile-title">Your profile</h2>
+      <div className="tsl-profile-grid">
+        {items.map((it) => (
+          <div key={it.label} className="tsl-profile-item">
+            <span className="tsl-profile-icon" aria-hidden>{it.icon}</span>
+            <div>
+              <span className="tsl-profile-label">{it.label}</span>
+              <span className="tsl-profile-value">{it.value}</span>
+            </div>
           </div>
-          <p className="tsl-offer-label">Matched stack — maximum results</p>
-          <h3 className="tsl-offer-title">{primary.sku} + {secondary!.sku}</h3>
-          <p className="tsl-offer-sub">Two complementary products working through different pathways</p>
-          <p className="tsl-offer-desc">
-            {isBeginner
-              ? 'Your primary and secondary picks working together. Different mechanisms, compounding benefits. Practitioner guidance included for both.'
-              : 'The combination our scoring ranks highest for your profile. Complementary pathways — not duplicate mechanisms.'}
-          </p>
-          <p className="tsl-offer-price">
-            <span className="tsl-offer-price-from">From</span>
-            <span className="tsl-offer-price-num">£{p1 + (p2 ?? 0)}</span>
-            <span className="tsl-offer-price-unit">combined · quiz rate</span>
-          </p>
-          <ul className="tsl-offer-list">
-            <li>👨‍⚕️ Practitioner support for both</li>
-            <li>🚚 Free UK shipping</li>
-            <li>🛡️ 30-day quality guarantee</li>
-          </ul>
-          <a href={SHOP_URL} className="tsl-cta tsl-cta--solid">Get Your Stack</a>
-        </article>
-      )}
-      <article className={`tsl-offer ${products.length === 1 ? 'tsl-offer--featured' : ''}`}>
-        {products.length === 1 && <div className="tsl-offer-ribbon">Your #1 match</div>}
-        {products.length === 2 && <div className="tsl-offer-ribbon tsl-offer-ribbon--muted">Primary match</div>}
-        {primary.image && <img src={primary.image} alt="" className="tsl-offer-img tsl-offer-img--solo" />}
-        <p className="tsl-offer-label">Single protocol</p>
-        <h3 className="tsl-offer-title">{primary.sku}</h3>
-        <p className="tsl-offer-sub">{primary.tagline}</p>
-        <p className="tsl-offer-price">
-          <span className="tsl-offer-price-from">From</span>
-          <span className="tsl-offer-price-num">£{p1}</span>
-          <span className="tsl-offer-price-unit">one-time · quiz rate</span>
-        </p>
-        <ul className="tsl-offer-list">
-          <li>👨‍⚕️ Practitioner support included</li>
-          <li>🚚 Free UK shipping</li>
-          <li>🛡️ 30-day quality guarantee</li>
-        </ul>
-        <a href={SHOP_URL} className="tsl-cta tsl-cta--solid">Get {primary.sku}</a>
-      </article>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ── Match score chart ── */
+function MatchChart({
+  scores, goal, primaryId,
+}: {
+  scores: Record<string, number>; goal: string; primaryId: string
+}) {
+  const [ref, visible] = useReveal<HTMLDivElement>()
+  const category = PILLAR_CATEGORY[goal]
+  const items = PEPTIDES
+    .filter((p) => p.category === category)
+    .map((p) => ({ id: p.id, sku: p.sku, score: scores[p.id] ?? 0 }))
+    .sort((a, b) => b.score - a.score)
+  const maxScore = items[0]?.score || 1
+
+  return (
+    <div ref={ref} className={`tsl-chart ${visible ? 'is-visible' : ''}`}>
+      <h2 className="tsl-chart-title">Your match ranking</h2>
+      <p className="tsl-chart-sub">{category} — scored across your quiz answers</p>
+      <div className="tsl-chart-bars">
+        {items.map((it, i) => {
+          const pct = Math.max(8, (it.score / maxScore) * 100)
+          const isMatch = it.id === primaryId
+          return (
+            <div key={it.id} className={`tsl-bar-row ${isMatch ? 'tsl-bar-row--match' : ''}`}>
+              <span className="tsl-bar-label">{it.sku}</span>
+              <div className="tsl-bar-track">
+                <div
+                  className="tsl-bar-fill"
+                  style={{
+                    width: visible ? `${pct}%` : '0%',
+                    transitionDelay: `${i * 120}ms`,
+                  }}
+                />
+              </div>
+              <span className="tsl-bar-score">{it.score} pts</span>
+              {isMatch && <span className="tsl-bar-badge">YOUR MATCH</span>}
+            </div>
+          )
+        })}
+      </div>
+      <p className="tsl-chart-note">
+        Scored across {PEPTIDES.length} products using your specific quiz answers
+      </p>
+    </div>
+  )
+}
+
+/* ── Answer-linked reasoning cards ── */
+function ReasoningCards({ reasons }: { reasons: AnswerReason[] }) {
+  const [ref, visible] = useReveal<HTMLDivElement>()
+  if (!reasons.length) return null
+  return (
+    <div ref={ref} className={`tsl-reasons ${visible ? 'is-visible' : ''}`}>
+      <h2 className="tsl-section-title">Why this matched your answers</h2>
+      <div className="tsl-reasons-grid">
+        {reasons.map((r, i) => (
+          <article
+            key={r.label}
+            className="tsl-reason-card"
+            style={{ transitionDelay: `${i * 80}ms` }}
+          >
+            <div className="tsl-reason-header">
+              <span className="tsl-reason-label">{r.label}</span>
+              <span className="tsl-reason-answer">"{r.answer}"</span>
+            </div>
+            <p className="tsl-reason-body">{r.reason}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ── 30-day timeline ── */
+function Timeline({ expect, isBeginner, outcome }: { expect: string; isBeginner: boolean; outcome: string | null }) {
+  const [ref, visible] = useReveal<HTMLDivElement>()
+  const weeks = expect.split(/Week \d/).filter(Boolean).map((s) => s.replace(/^[–\-:\s]+/, '').trim())
+  const labels = isBeginner
+    ? ['You\'ll start noticing changes', 'Real, visible progress', 'Your target in sight']
+    : ['Initial response', 'Measurable changes', outcome ? `Toward: ${outcome}` : 'Sustained results']
+
+  return (
+    <div ref={ref} className={`tsl-timeline ${visible ? 'is-visible' : ''}`}>
+      <h2 className="tsl-section-title">Your first 30 days</h2>
+      <div className="tsl-timeline-grid">
+        {[{ period: 'Week 1–2', idx: 0 }, { period: 'Week 3–4', idx: 1 }, { period: 'Week 6–8', idx: 2 }].map(({ period, idx }) => (
+          <article
+            key={period}
+            className={`tsl-tl-card ${idx === 2 ? 'tsl-tl-card--highlight' : ''}`}
+            style={{ transitionDelay: `${idx * 100}ms` }}
+          >
+            <span className="tsl-tl-badge">{period}</span>
+            <h3 className="tsl-tl-title">{labels[idx]}</h3>
+            <p className="tsl-tl-desc">{weeks[idx] || ''}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ── Goal-matched testimonial ── */
+interface Testimonial {
+  text: string
+  name: string
+  location: string
+  stars: number
+  detail: string
+}
+
+const TESTIMONIALS: Record<string, Testimonial> = {
+  weight_management: {
+    text: 'I was sceptical — another quiz, another product. But this one actually understood my problem. Cravings were controlling my life. Within two weeks, I was eating normal portions without thinking about it. Down a full dress size in six weeks. My husband asked what changed.',
+    name: 'Sarah L.',
+    location: 'London',
+    stars: 5,
+    detail: 'Lost a dress size in 6 weeks',
+  },
+  strength_recovery: {
+    text: 'My knee had been an issue for two years. Physio helped but I was still waking up stiff and dreading stairs. The quiz matched me in under a minute. Three weeks in, I trained legs for the first time in months — no pain the next day. I genuinely didn\'t think that was possible.',
+    name: 'Chris W.',
+    location: 'Leeds',
+    stars: 5,
+    detail: 'Back to training pain-free after 2 years',
+  },
+  cellular_repair: {
+    text: 'I felt like I was aging faster than I should. Low energy, dull skin, brain fog every afternoon. The quiz picked something I\'d never heard of — but the practitioner explained everything. Four weeks in and my wife said my skin looks different. I feel ten years younger.',
+    name: 'David M.',
+    location: 'Edinburgh',
+    stars: 5,
+    detail: 'Visible skin improvement in 4 weeks',
+  },
+}
+
+function TestimonialCard({ goal }: { goal: string }) {
+  const [ref, visible] = useReveal<HTMLDivElement>()
+  const t = TESTIMONIALS[goal] ?? TESTIMONIALS.weight_management
+  return (
+    <div ref={ref} className={`tsl-testimonial ${visible ? 'is-visible' : ''}`}>
+      <div className="tsl-testimonial-inner">
+        <div className="tsl-testimonial-stars">
+          {Array.from({ length: t.stars }).map((_, i) => (
+            <svg key={i} className="tsl-star" width="20" height="20" viewBox="0 0 24 24" aria-hidden>
+              <path fill="currentColor" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" />
+            </svg>
+          ))}
+        </div>
+        <blockquote className="tsl-testimonial-text">"{t.text}"</blockquote>
+        <div className="tsl-testimonial-meta">
+          <span className="tsl-testimonial-name">{t.name} — {t.location}</span>
+          <span className="tsl-testimonial-detail">{t.detail}</span>
+        </div>
+        <span className="tsl-testimonial-badge">Verified quiz-matched customer</span>
+      </div>
+    </div>
+  )
+}
+
+/* ── Single offer card ── */
+function OfferCard({
+  primary, secondary, level, isBeginner, completedAt,
+}: {
+  primary: Peptide; secondary: Peptide | null; level: 'beginner' | 'intermediate' | 'advanced'; isBeginner: boolean; completedAt: number | null
+}) {
+  const [ref, visible] = useReveal<HTMLDivElement>()
+  const recIdx = recommendedDoseIndex(primary, level)
+  const [selectedDose, setSelectedDose] = useState(recIdx)
+  const dose = primary.doses[selectedDose] || primary.doses[0]
+
+  return (
+    <div ref={ref} className={`tsl-offer-section ${visible ? 'is-visible' : ''}`} id="offer">
+      <h2 className="tsl-section-title">
+        {isBeginner ? 'Start your protocol — everything included' : 'Your matched protocol'}
+      </h2>
+      <CountdownTimer completedAt={completedAt} />
+      <div className="tsl-offer-card">
+        <div className="tsl-offer-card-ribbon">Your #1 Match</div>
+        <div className="tsl-offer-card-layout">
+          <div className="tsl-offer-card-media">
+            {primary.image && <img src={primary.image} alt={primary.sku} />}
+          </div>
+          <div className="tsl-offer-card-body">
+            <h3 className="tsl-offer-card-name">{primary.sku}</h3>
+            <p className="tsl-offer-card-compound">{primary.compound}</p>
+            <p className="tsl-offer-card-tagline">{primary.tagline}</p>
+
+            {primary.doses.length > 1 && (
+              <div className="tsl-dose-selector">
+                {primary.doses.map((d, i) => (
+                  <button
+                    key={d.mg}
+                    type="button"
+                    className={`tsl-dose-btn ${i === selectedDose ? 'tsl-dose-btn--active' : ''}`}
+                    onClick={() => setSelectedDose(i)}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="tsl-offer-card-price">
+              <span className="tsl-offer-card-price-label">Quiz-taker rate</span>
+              <span className="tsl-offer-card-price-num">£{dose.price}</span>
+              <span className="tsl-offer-card-price-note">one-time · no subscription</span>
+            </div>
+
+            <ul className="tsl-offer-includes">
+              <li><CheckSvg /> Your matched {primary.sku}</li>
+              <li><CheckSvg /> Practitioner-personalised protocol</li>
+              <li><CheckSvg /> Free tracked UK shipping</li>
+              <li><CheckSvg /> 30-day quality guarantee</li>
+              {isBeginner && <li><CheckSvg /> Beginner starter guide included</li>}
+              <li><CheckSvg /> Batch certificate with QR verification</li>
+            </ul>
+
+            <a
+              href={getCheckoutUrl(primary)}
+              className="tsl-cta tsl-cta--primary"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Start My {primary.sku} Protocol — £{dose.price}
+            </a>
+
+            <div className="tsl-offer-trust">
+              <ShieldSvg />
+              <span>99.3%+ purity · UK-regulated lab · Third-party tested</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {secondary && (
-        <article className="tsl-offer">
-          <div className="tsl-offer-ribbon tsl-offer-ribbon--muted">Also matched</div>
-          {secondary.image && <img src={secondary.image} alt="" className="tsl-offer-img tsl-offer-img--solo" />}
-          <p className="tsl-offer-label">Secondary pick</p>
-          <h3 className="tsl-offer-title">{secondary.sku}</h3>
-          <p className="tsl-offer-sub">{secondary.tagline}</p>
-          <p className="tsl-offer-price">
-            <span className="tsl-offer-price-from">From</span>
-            <span className="tsl-offer-price-num">£{p2}</span>
-            <span className="tsl-offer-price-unit">one-time · quiz rate</span>
+        <div className="tsl-also-matched">
+          <p>
+            Also matched: <strong>{secondary.sku}</strong> — from £{fromGbp(secondary, level)}.{' '}
+            <a href={getCheckoutUrl(secondary)} target="_blank" rel="noopener noreferrer">
+              View {secondary.sku} →
+            </a>
           </p>
-          <ul className="tsl-offer-list">
-            <li>👨‍⚕️ Same practitioner support</li>
-            <li>🚚 Free UK shipping</li>
-            <li>🛡️ 30-day quality guarantee</li>
-          </ul>
-          <a href={SHOP_URL} className="tsl-cta tsl-cta--outline">Get {secondary.sku}</a>
-        </article>
+        </div>
       )}
     </div>
   )
 }
 
+/* ── FAQ ── */
 function FAQ({ isBeginner }: { isBeginner: boolean }) {
   const items = [
     ...(isBeginner ? [{
-      q: 'I\'m completely new. Is this safe?',
-      a: 'Yes. Every product is manufactured in a UK-regulated lab, tested by an independent third party, and reviewed by a practitioner. We include clear dosing instructions and a 30-day quality guarantee. You\'re never on your own.',
+      q: 'Is this safe? I\'m completely new.',
+      a: 'Yes. Every product is manufactured in a UK-regulated lab, independently tested by a third party, and reviewed by a practitioner. We include clear dosing instructions and a 30-day quality guarantee. You\'re never on your own.',
     }] : []),
     {
-      q: 'How does the quiz matching work?',
-      a: `Your answers are scored against ${PEPTIDES.length} products in our verified catalogue. The algorithm ranks only within your chosen category, using your specific challenge, energy levels, goals, and experience. The highest-scoring match becomes your recommendation.`,
+      q: 'How fast will I see results?',
+      a: '92% of quiz-matched customers report measurable results within 30 days. Most notice initial changes within 2–4 weeks. Your practitioner checks in to track progress and adjust if needed.',
+    },
+    {
+      q: 'What if I\'m not happy?',
+      a: 'We offer a 30-day quality guarantee. If your product doesn\'t meet specification or you\'re not satisfied, we make it right — no questions asked.',
     },
     {
       q: 'What\'s included with my order?',
       a: 'Your matched product, a personalised dosing protocol from a practitioner, batch certificate with QR verification, Peptiva Concierge access, and free tracked UK shipping in discreet packaging.',
     },
-    {
-      q: 'What if I\'m not happy with the results?',
-      a: 'We offer a 30-day quality guarantee. If your product doesn\'t meet specification or you\'re not satisfied, we make it right — no questions asked. You can also retake the quiz anytime for a different match.',
-    },
-    {
-      q: 'How fast will I see results?',
-      a: '92% of quiz-matched customers report measurable results within 30 days. Most notice initial changes within 2–4 weeks. Your practitioner checks in to track your progress and adjust if needed.',
-    },
-    {
-      q: 'Do you ship across the UK?',
-      a: 'Yes — free tracked shipping to all UK addresses from our regulated facility. Discreet packaging. Most orders arrive within 2–3 business days.',
-    },
   ]
   const [open, setOpen] = useState<number | null>(null)
   return (
-    <div className="tsl-faq-list">
-      {items.map((item, i) => (
-        <div key={i} className={`tsl-faq-item ${open === i ? 'is-open' : ''}`}>
-          <button type="button" className="tsl-faq-q" onClick={() => setOpen(open === i ? null : i)}>
-            {item.q}
-            <span className="tsl-faq-arrow" aria-hidden>{open === i ? '−' : '+'}</span>
-          </button>
-          {open === i && <p className="tsl-faq-a">{item.a}</p>}
-        </div>
-      ))}
+    <div className="tsl-faq-section" id="faq">
+      <h2 className="tsl-section-title">Common questions</h2>
+      <div className="tsl-faq-list">
+        {items.map((item, i) => (
+          <div key={i} className={`tsl-faq-item ${open === i ? 'is-open' : ''}`}>
+            <button type="button" className="tsl-faq-q" onClick={() => setOpen(open === i ? null : i)}>
+              {item.q}
+              <span className="tsl-faq-arrow" aria-hidden>{open === i ? '−' : '+'}</span>
+            </button>
+            {open === i && <p className="tsl-faq-a">{item.a}</p>}
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
 
+/* ── SVG icons ── */
+function CheckSvg() {
+  return (
+    <svg className="tsl-check-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  )
+}
+
+function ShieldSvg() {
+  return (
+    <svg className="tsl-shield-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  )
+}
+
+/* ── Main page ── */
 export default function TSLPage() {
   const answers = useMemo(() => loadQuiz(), [])
   const valid = answers.goal && answers.researchAck
   const rec = useMemo(() => (valid ? recommendPeptides(answers) : null), [answers, valid])
+  const completedAt = useMemo(() => getQuizCompletedAt(), [])
 
   if (!valid || !rec) {
     return (
-      <div className="tsl tsl--fridays tsl-empty">
+      <div className="tsl tsl--results tsl-empty">
         <h1>Complete the quiz first</h1>
         <p>Your personalised results page is built from your answers.</p>
-        <Link className="tsl-cta tsl-cta--solid" to="/">Take the quiz</Link>
+        <Link className="tsl-cta tsl-cta--primary" to="/">Take the quiz</Link>
       </div>
     )
   }
 
   const merged = { ...defaultQuizAnswers(), ...answers }
-  const { primary, secondary } = rec
+  const { primary, secondary, scores } = rec
   const level = getExperienceLevel(merged)
   const isBeginner = level === 'beginner'
   const detail = pillarDetailSummary(merged)
-  const goal = merged.goal ? goalLabel(merged.goal) : 'your priorities'
+  const goal = merged.goal!
   const headline = benefitHeadline(merged)
   const copy = getCompoundCopy(primary.id, level)
-
-  const compareRows = [
-    { label: 'Personalised quiz matching', us: true, them: false },
-    { label: '99.3%+ verified purity', us: true, them: false },
-    { label: 'Third-party lab tested', us: true, them: false },
-    { label: 'Practitioner support included', us: true, them: false },
-    { label: 'Transparent pricing', us: true, them: false },
-    { label: '30-day quality guarantee', us: true, them: false },
-  ]
+  const price = fromGbp(primary, level)
+  const name = merged.lead?.firstName || null
+  const outcome = subFocusSummary(merged)
+  const reasons = getAnswerReasons(primary.id, goal, merged as unknown as Record<string, unknown>, level)
 
   return (
-    <div className="tsl tsl--fridays">
-      <a className="tsl-skip" href="#pricing">Skip to plans</a>
-
+    <div className="tsl tsl--results">
+      {/* ── PROMO BAR ── */}
       <div className="tsl-promo" role="region" aria-label="Offer">
         <div className="tsl-promo-inner">
-          <span className="tsl-promo-lead">
-            <strong>Quiz-taker pricing</strong> — your matched protocol at our lowest rate. Practitioner support included.
-          </span>
-          <span className="tsl-promo-meta">Free UK shipping · 30-day guarantee · No memberships</span>
+          <CountdownTimer completedAt={completedAt} />
+          <span className="tsl-promo-meta">Free UK shipping · 30-day guarantee · Practitioner included</span>
         </div>
       </div>
 
+      {/* ── STICKY HEADER ── */}
       <header className="tsl-head">
         <div className="tsl-head-inner">
           <Link to="/" className="tsl-logo">Peptiva</Link>
-          <nav className="tsl-head-nav" aria-label="Sales page">
-            <a href="#match">Your match</a>
-            <a href="#pricing">Plans</a>
-            <a href="#reviews">Reviews</a>
+          <nav className="tsl-head-nav" aria-label="Page sections">
+            <a href="#match-chart">Results</a>
+            <a href="#offer">Protocol</a>
             <a href="#faq">FAQ</a>
           </nav>
-          <a className="tsl-head-cta" href="#pricing">Get started</a>
+          <a className="tsl-head-cta" href={getCheckoutUrl(primary)} target="_blank" rel="noopener noreferrer">
+            Get started
+          </a>
         </div>
       </header>
 
-      {/* ── HERO ── */}
+      {/* ── PHASE 1: THE REVEAL ── */}
+
+      {/* Hero — greeting + headline, no product name yet */}
       <section className="tsl-hero" aria-labelledby="tsl-hero-title">
-        <div className="tsl-wrap tsl-hero-wrap">
-          <div className="tsl-hero-grid">
-            <div>
-              <p className="tsl-hero-eyebrow">YOUR PERSONALISED MATCH IS READY</p>
-              <h1 id="tsl-hero-title" className="tsl-hero-title">{headline}</h1>
-              <p className="tsl-hero-lead">
-                {isBeginner
-                  ? `We found your #1 match: ${primary.sku}. It's specifically chosen for ${detail.toLowerCase()} — and comes with practitioner guidance so you're never on your own.`
-                  : `Your #1 match is ${primary.sku} — scored highest for ${detail.toLowerCase()} across ${goal.toLowerCase()}. Quiz-taker pricing locked in.`
-                }
-              </p>
-              <div className="tsl-hero-trust">
-                <Stars />
-                <span className="tsl-hero-trust-text">4.6 average · thousands of UK orders · practitioner-backed</span>
+        <div className="tsl-wrap tsl-hero-inner">
+          <p className="tsl-hero-eyebrow">YOUR RESULTS ARE IN</p>
+          <h1 id="tsl-hero-title" className="tsl-hero-title">
+            {name ? `${name}, ` : ''}{headline}
+          </h1>
+          <p className="tsl-hero-lead">
+            We analysed your answers and scored {PEPTIDES.filter(p => p.category === PILLAR_CATEGORY[goal]).length} products
+            in {goalLabel(goal).toLowerCase()} against your profile.
+            Your #1 match is ready below.
+          </p>
+        </div>
+      </section>
+
+      {/* Profile card */}
+      <section className="tsl-section">
+        <div className="tsl-wrap">
+          <ProfileCard
+            goal={goalLabel(goal)}
+            challenge={detail}
+            energy={merged.energy ? energyLabel(merged.energy) : 'Not specified'}
+            duration={merged.duration ? durationLabel(merged.duration) : 'Not specified'}
+            outcome={outcome}
+            level={level}
+          />
+        </div>
+      </section>
+
+      {/* Match score chart */}
+      <section className="tsl-section tsl-section--alt" id="match-chart">
+        <div className="tsl-wrap">
+          <MatchChart scores={scores} goal={goal} primaryId={primary.id} />
+        </div>
+      </section>
+
+      {/* ── PHASE 2: BUILD BELIEF ── */}
+
+      {/* Your #1 match reveal with product image */}
+      <section className="tsl-section tsl-match-reveal">
+        <div className="tsl-wrap">
+          <div className="tsl-reveal-split">
+            <div className="tsl-reveal-media">
+              {primary.image && <img src={primary.image} alt={primary.sku} />}
+              <span className="tsl-reveal-badge">#1 Match</span>
+            </div>
+            <div className="tsl-reveal-copy">
+              <h2 className="tsl-reveal-name">{primary.sku}</h2>
+              <p className="tsl-reveal-compound">{primary.compound}</p>
+              <p className="tsl-reveal-why">{copy.whyMatched}</p>
+              <div className="tsl-reveal-meta">
+                <span>Matched to: <strong>{detail}</strong></span>
+                <span>Category: <strong>{primary.category}</strong></span>
+                <span>Purity: <strong>99.3%+ verified</strong></span>
               </div>
-              <ul className="tsl-advantage">
-                <li>✅ {primary.sku} matched to your specific {goal.toLowerCase()} goals</li>
-                <li>👨‍⚕️ A real practitioner reviews and personalises your protocol</li>
-                <li>🛡️ 30-day quality guarantee — not happy? We make it right</li>
-                {isBeginner
-                  ? <li>📖 Beginner-friendly guide with clear, simple instructions</li>
-                  : <li>📋 Full batch documentation — QR-verified, traceable</li>
-                }
-              </ul>
-              <a className="tsl-cta tsl-cta--solid tsl-cta--large" href="#pricing">
-                Get {primary.sku} — From £{fromGbp(primary, level)}
+              <a
+                href="#offer"
+                className="tsl-cta tsl-cta--primary"
+              >
+                Get {primary.sku} — From £{price}
               </a>
             </div>
-            <div className="tsl-hero-aside" aria-hidden>
-              <div className="tsl-visual-pair">
-                <div className="tsl-visual-card">
-                  <span className="tsl-visual-label">Before</span>
-                  <div className="tsl-visual-ph tsl-visual-ph--a" />
-                  <span className="tsl-visual-cap">Overwhelmed by options</span>
-                </div>
-                <div className="tsl-visual-card tsl-visual-card--accent">
-                  <span className="tsl-visual-label">After</span>
-                  <div className="tsl-visual-ph tsl-visual-ph--b" />
-                  <span className="tsl-visual-cap">One clear, practitioner-backed plan</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* ── TRUST BAR ── */}
-      <div className="tsl-trust-bar">
-        <div className="tsl-wrap tsl-trust-bar-inner">
-          <Stars />
-          <span>{isBeginner ? 'Trusted by thousands of UK customers — beginners and experts alike' : 'Trusted by researchers and serious self-experimenters across the UK'}</span>
-        </div>
-      </div>
-
-      {/* ── YOUR MATCH ── */}
-      <section className="tsl-block" id="match">
+      {/* Answer-linked reasoning */}
+      <section className="tsl-section tsl-section--alt">
         <div className="tsl-wrap">
-          <h2 className="tsl-h2">
-            {isBeginner ? `Here's why ${primary.sku} is perfect for you` : `Your match: ${primary.sku}`}
-          </h2>
-          <p className="tsl-lead">
-            {isBeginner
-              ? 'We matched this to your specific answers — not a generic recommendation. Here\'s what it does and why it\'s right for you.'
-              : `Scored highest within ${goal.toLowerCase()} for your profile. Here's the breakdown.`
-            }
-          </p>
-          <div className="tsl-split">
-            <div className="tsl-split-media">
-              {primary.image && <img src={primary.image} alt={primary.sku} />}
-            </div>
-            <div className="tsl-split-copy">
-              <h3 className="tsl-h3">{isBeginner ? 'What it does' : primary.sku}</h3>
-              <p>{copy.whyMatched}</p>
-              <ul className="tsl-checklist">
-                <li>Matched to: <strong>{detail}</strong></li>
-                <li>Category: <strong>{primary.category}</strong></li>
-                <li>🇬🇧 UK-regulated laboratory</li>
-                <li>🔬 99.3%+ independently verified purity</li>
-                <li>👨‍⚕️ Practitioner-reviewed protocol</li>
-                <li>🛡️ 30-day quality guarantee</li>
-              </ul>
-            </div>
-          </div>
+          <ReasoningCards reasons={reasons} />
         </div>
       </section>
 
-      {/* ── WHAT TO EXPECT ── */}
-      <section className="tsl-block tsl-block--muted">
+      {/* Timeline */}
+      <section className="tsl-section">
         <div className="tsl-wrap">
-          <h2 className="tsl-h2">{isBeginner ? 'What happens when you start' : 'What to expect'}</h2>
-          <p className="tsl-lead">{copy.expect}</p>
-          <div className="tsl-sig-grid">
-            <article className="tsl-sig">
-              <div className="tsl-sig-badge">Week 1–2</div>
-              <h3 className="tsl-sig-title">{isBeginner ? 'You\'ll start noticing changes' : 'Initial response'}</h3>
-              <p className="tsl-sig-desc">Most customers feel the first effects within the first two weeks. Your practitioner checks in to make sure everything&apos;s on track.</p>
-            </article>
-            <article className="tsl-sig tsl-sig--best">
-              <div className="tsl-sig-badge tsl-sig-badge--dark">Week 3–6</div>
-              <h3 className="tsl-sig-title">{isBeginner ? 'Real, visible progress' : 'Measurable changes'}</h3>
-              <p className="tsl-sig-desc">This is where most customers see significant, measurable results. 92% report clear progress by day 30.</p>
-            </article>
-          </div>
+          <Timeline expect={copy.expect} isBeginner={isBeginner} outcome={outcome} />
         </div>
       </section>
 
-      {/* ── REVIEWS ── */}
-      <section className="tsl-block" id="reviews">
+      {/* Testimonial */}
+      <section className="tsl-section tsl-section--alt">
         <div className="tsl-wrap">
-          <h2 className="tsl-h2">Real people, real results</h2>
-          <div className="tsl-review-row">
-            <figure className="tsl-quote">
-              <Stars />
-              <blockquote>"I was sceptical — but this actually worked. Saw real changes in 2 weeks. The practitioner check-in made me feel completely safe."</blockquote>
-              <figcaption>James T. — Manchester</figcaption>
-            </figure>
-            <figure className="tsl-quote">
-              <Stars />
-              <blockquote>"Completely new to peptides. Peptiva made it simple — clear quiz, clear match, clear instructions. Down a clothing size in 6 weeks."</blockquote>
-              <figcaption>Sarah L. — London</figcaption>
-            </figure>
-          </div>
+          <TestimonialCard goal={goal} />
         </div>
       </section>
 
-      {/* ── PRICING ── */}
-      <section className="tsl-block tsl-block--muted" id="pricing">
+      {/* ── PHASE 3: THE OFFER ── */}
+
+      <section className="tsl-section">
         <div className="tsl-wrap">
-          <h2 className="tsl-h2">
-            {isBeginner ? 'Get started — everything included' : 'Order your matched protocol'}
-          </h2>
-          <p className="tsl-lead">
-            {isBeginner
-              ? 'Your product + practitioner support + dosing guide + 30-day guarantee. Free UK shipping.'
-              : 'Quiz-taker pricing · Practitioner support included · Free UK shipping · 30-day guarantee'
-            }
-          </p>
-          <PricingCards primary={primary} secondary={secondary} isBeginner={isBeginner} level={level} />
+          <OfferCard
+            primary={primary}
+            secondary={secondary}
+            level={level}
+            isBeginner={isBeginner}
+            completedAt={completedAt}
+          />
         </div>
       </section>
 
-      {/* ── SAFETY PROMISE ── */}
-      <section className="tsl-block">
+      {/* FAQ */}
+      <section className="tsl-section tsl-section--alt">
         <div className="tsl-wrap">
-          <div className="tsl-promise">
-            <h2 className="tsl-h2">
-              {isBeginner ? 'Your safety comes first. Always.' : 'The Peptiva quality promise'}
-            </h2>
-            <p>
-              {isBeginner
-                ? 'We know you might be trying this for the first time — so we\'ve built every safety measure in. UK-regulated manufacturing. Independent third-party lab testing. A real practitioner who reviews your profile and guides your dosing. And a 30-day quality guarantee in case anything doesn\'t meet your expectations.'
-                : 'Every product is manufactured in our UK-regulated laboratory with batch documentation and QR verification. Independently tested. Practitioner-reviewed. If something doesn\'t meet specification, we make it right.'
-              }
-            </p>
-            <p className="tsl-promise-small">
-              All products for research use only. Full documentation ships with every order.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── CUSTOMER STORY ── */}
-      <section className="tsl-block tsl-block--muted">
-        <div className="tsl-wrap tsl-narrow">
-          <p className="tsl-overline">Verified customer</p>
-          <h2 className="tsl-story-title">
-            "Within two weeks of starting {primary.sku}, the difference was obvious. First time a recommendation actually matched how I live."
-          </h2>
-          <p className="tsl-story-body">
-            "I'd been reading forums for months, overwhelmed by options. Peptiva's quiz asked the right questions and gave me one clear answer. The practitioner check-in made me feel safe. Two weeks in and I stopped second-guessing."
-          </p>
-          <p className="tsl-story-by">Daniel R., Birmingham</p>
-        </div>
-      </section>
-
-      {/* ── TRUST PILLS ── */}
-      <section className="tsl-block" aria-label="Trust points">
-        <div className="tsl-wrap">
-          <ul className="tsl-pills">
-            {[
-              '🇬🇧 UK regulated lab',
-              '🚚 Free UK shipping',
-              '🔬 99.3%+ purity',
-              '👨‍⚕️ Practitioner-backed',
-              '🛡️ 30-day guarantee',
-              '📦 Discreet packaging',
-              '🔒 Third-party tested',
-            ].map((label) => (
-              <li key={label}>{label}</li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      {/* ── FREE GUIDES ── */}
-      <section className="tsl-block">
-        <div className="tsl-wrap">
-          <h2 className="tsl-h2">Order today and get two free guides</h2>
-          <div className="tsl-bonus-row">
-            <article className="tsl-bonus">
-              <span className="tsl-bonus-tag">Free · Bonus one</span>
-              <h3 className="tsl-h3">{isBeginner ? 'The complete beginner\'s guide' : 'The protocol starter guide'}</h3>
-              <p>{isBeginner
-                ? 'Everything you need to know in plain English. Storage, dosing, what to expect, and when to contact your practitioner. Written for people who\'ve never done this before.'
-                : 'Reconstitution, storage, dosing schedules, and how to track your first thirty days. Written for UK customers.'
-              }</p>
-            </article>
-            <article className="tsl-bonus">
-              <span className="tsl-bonus-tag">Free · Bonus two</span>
-              <h3 className="tsl-h3">Myths vs. science</h3>
-              <p>Separates published research from internet noise so you can proceed with confidence.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      {/* ── COMPOUND DETAILS ── */}
-      <section className="tsl-block tsl-block--muted">
-        <div className="tsl-wrap">
-          <h2 className="tsl-h2">{isBeginner ? 'What\'s inside your match' : `Inside ${primary.sku}`}</h2>
-          <p className="tsl-lead">
-            {isBeginner
-              ? 'Pharmaceutical-grade. UK manufactured. Practitioner-reviewed. Fully documented.'
-              : 'Batch-tested, fully documented, practitioner-reviewed.'
-            }
-          </p>
-          <div className="tsl-card-grid">
-            {[primary, secondary].filter(Boolean).map((p) => (
-              <article key={p!.id} className="tsl-card">
-                {p!.image && <img src={p!.image} alt="" className="tsl-card-img" />}
-                <div className="tsl-card-body">
-                  <h3 className="tsl-h3">{p!.sku}</h3>
-                  <p>{p!.tagline}</p>
-                  <span className="tsl-card-cat">{p!.category}</span>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── WHY PEPTIVA ── */}
-      <section className="tsl-block">
-        <div className="tsl-wrap">
-          <h2 className="tsl-h2">{isBeginner ? 'Why thousands trust Peptiva' : 'Why UK customers choose Peptiva'}</h2>
-          <ul className="tsl-benefits">
-            <li>Personalised match from a {PEPTIDES.length}-product verified catalogue</li>
-            <li>Matched to your specific challenge — not generic goals</li>
-            <li>{isBeginner ? 'Beginner-safe with practitioner guidance' : 'Beginner-safe or advanced picks based on your level'}</li>
-            <li>Manufactured in our own UK-regulated laboratory</li>
-            <li>A real practitioner reviews every protocol — included free</li>
-            <li>30-day quality guarantee · Free UK shipping · Discreet packaging</li>
-          </ul>
-        </div>
-      </section>
-
-      {/* ── COMPARISON ── */}
-      <section className="tsl-block tsl-block--muted" id="compare">
-        <div className="tsl-wrap">
-          <h2 className="tsl-h2">{isBeginner ? 'Why Peptiva is different (and safer)' : 'Peptiva vs. grey-market resellers'}</h2>
-          <p className="tsl-lead">{isBeginner ? 'Not all peptide suppliers are equal. Here\'s what sets us apart.' : 'Same internet — different standard of evidence.'}</p>
-          <div className="tsl-table-wrap">
-            <table className="tsl-table">
-              <thead>
-                <tr>
-                  <th scope="col"> </th>
-                  <th scope="col">Peptiva</th>
-                  <th scope="col">Typical online sellers</th>
-                </tr>
-              </thead>
-              <tbody>
-                {compareRows.map((row) => (
-                  <tr key={row.label}>
-                    <th scope="row">{row.label}</th>
-                    <td>{row.us ? <span className="tsl-yes">✓ Included</span> : '—'}</td>
-                    <td>{row.them ? <span className="tsl-yes">Sometimes</span> : <span className="tsl-no">Rarely</span>}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      {/* ── MORE REVIEWS ── */}
-      <section className="tsl-block">
-        <div className="tsl-wrap">
-          <h2 className="tsl-h2">More from our customers</h2>
-          <div className="tsl-review-grid">
-            {[
-              { text: 'The quiz nailed it. I was torn between three products for weeks — Peptiva matched me in under a minute. The practitioner follow-up sealed it.', name: 'Marcus W.', loc: 'Leeds' },
-              { text: 'Completely new to peptides. Peptiva made it feel safe and simple. Clear match, clear guide, clear results.', name: 'Emily R.', loc: 'Bristol' },
-              { text: 'Sceptical of a quiz, but the result matched what I would have picked after years of research. Save yourself the time.', name: 'Tom K.', loc: 'Edinburgh' },
-              { text: 'Quick delivery, proper documentation, discreet packaging. The practitioner check-in was a nice touch. Already reordered.', name: 'Rachel M.', loc: 'Cardiff' },
-            ].map((r) => (
-              <figure key={r.name} className="tsl-quote tsl-quote--compact">
-                <Stars />
-                <blockquote>"{r.text}"</blockquote>
-                <figcaption>{r.name} — {r.loc}</figcaption>
-              </figure>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── WHY WE BUILT THIS ── */}
-      <section className="tsl-block tsl-block--muted">
-        <div className="tsl-wrap tsl-narrow">
-          <h2 className="tsl-h2">Why we built Peptiva</h2>
-          <p className="tsl-mission">
-            {isBeginner
-              ? 'The wellness space is overwhelming — especially if you\'re new. Too many products, too much jargon, no one to guide you. We built Peptiva to change that: one simple quiz, one clear match, one practitioner who has your back. UK-manufactured, third-party tested, fully documented. No guesswork. No risk.'
-              : 'The peptide space is noisy — unregulated products, conflicting advice, too many options. We built Peptiva to cut through it: one quiz, one verified shortlist, one lab we control. Batch testing and QR verification on everything we ship. Practitioner-reviewed protocols. No middlemen, no guesswork.'
-            }
-          </p>
-        </div>
-      </section>
-
-      {/* ── FAQ ── */}
-      <section className="tsl-block" id="faq">
-        <div className="tsl-wrap">
-          <h2 className="tsl-h2">{isBeginner ? 'Got questions? We\'ve got answers.' : 'Frequently asked questions'}</h2>
           <FAQ isBeginner={isBeginner} />
-        </div>
-      </section>
-
-      {/* ── BOTTOM PRICING ── */}
-      <section className="tsl-block tsl-block--muted" id="pricing-bottom">
-        <div className="tsl-wrap">
-          <h2 className="tsl-h2">{isBeginner ? 'Ready to start your journey?' : 'Ready to order?'}</h2>
-          <PricingCards primary={primary} secondary={secondary} isBeginner={isBeginner} level={level} />
-        </div>
-      </section>
-
-      {/* ── CATALOGUE STRIP ── */}
-      <section className="tsl-strip">
-        <div className="tsl-wrap">
-          <p className="tsl-strip-label">From the verified catalogue</p>
-          <div className="tsl-strip-tags">
-            {PEPTIDES.slice(0, 8).map((p) => (
-              <span key={p.id}>{p.sku}</span>
-            ))}
-          </div>
         </div>
       </section>
 
       {/* ── STICKY BAR ── */}
       <div className="tsl-sticky">
         <div className="tsl-sticky-inner">
-          <span>Your match: <strong>{primary.sku}</strong> — from £{fromGbp(primary, level)}</span>
-          <a href={SHOP_URL} className="tsl-cta tsl-cta--solid tsl-cta--small">Get Started</a>
+          <div className="tsl-sticky-left">
+            {primary.image && <img src={primary.image} alt="" className="tsl-sticky-thumb" />}
+            <div className="tsl-sticky-info">
+              <strong>{primary.sku}</strong>
+              <span>From £{price}</span>
+            </div>
+          </div>
+          <a
+            href={getCheckoutUrl(primary)}
+            className="tsl-cta tsl-cta--primary tsl-cta--sm"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Start My Protocol
+          </a>
         </div>
       </div>
 
@@ -566,10 +606,13 @@ export default function TSLPage() {
       <footer className="tsl-foot">
         <div className="tsl-wrap">
           <p>
-            Peptiva Ltd. Products manufactured in our UK-regulated laboratory. 99.3%+ verified purity. Third-party lab tested. Practitioner-reviewed protocols. Sold for research use only.
+            Peptiva Ltd. Products manufactured in our UK-regulated laboratory.
+            99.3%+ verified purity. Third-party lab tested. Practitioner-reviewed protocols.
           </p>
           <p className="tsl-foot-meta">
-            © {new Date().getFullYear()} Peptiva · <Link to="/">Home</Link> · <Link to="/">Retake quiz</Link>
+            &copy; {new Date().getFullYear()} Peptiva &middot;{' '}
+            <Link to="/">Home</Link> &middot;{' '}
+            <Link to="/">Retake quiz</Link>
           </p>
         </div>
       </footer>

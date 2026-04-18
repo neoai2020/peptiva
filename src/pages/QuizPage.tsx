@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { buildSteps, getTeaseMessage } from '../data/quizData'
-import { loadQuiz, saveQuiz } from '../lib/quizStorage'
+import { loadQuiz, saveQuiz, markQuizCompleted } from '../lib/quizStorage'
 import { goalProfileWord } from '../lib/quizLabels'
 import type { Gender, QuizAnswers } from '../types/quiz'
 import { defaultQuizAnswers } from '../types/quiz'
@@ -78,6 +78,7 @@ export default function QuizPage() {
         setAnswers((a) => {
           const done = { ...a, researchAck: true }
           saveQuiz(done)
+          markQuizCompleted()
           return done
         })
         setIsAnalyzing(true)

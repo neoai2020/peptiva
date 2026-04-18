@@ -71,6 +71,19 @@ export function saveQuiz(answers: QuizAnswers): void {
   sessionStorage.setItem(KEY, JSON.stringify(answers))
 }
 
+const TS_KEY = 'peptiva-quiz-completed-at'
+
+export function markQuizCompleted(): void {
+  if (!sessionStorage.getItem(TS_KEY)) {
+    sessionStorage.setItem(TS_KEY, String(Date.now()))
+  }
+}
+
+export function getQuizCompletedAt(): number | null {
+  const raw = sessionStorage.getItem(TS_KEY)
+  return raw ? Number(raw) : null
+}
+
 export function clearQuiz(): void {
   sessionStorage.removeItem(KEY)
   sessionStorage.removeItem('peptiva-quiz-v2')

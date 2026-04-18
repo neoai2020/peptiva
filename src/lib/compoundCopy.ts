@@ -136,3 +136,360 @@ export function getWhyPoints(id: string, issue: string, goal: string): string[] 
     `92% of quiz-matched customers see measurable results within 30 days. Not luck — precision. The right product, matched to the right profile.`,
   ]
 }
+
+export interface AnswerReason {
+  label: string
+  answer: string
+  reason: string
+}
+
+type AnswerReasonMap = Record<string, Record<string, string>>
+
+const WEIGHT_REASONS: Record<string, AnswerReasonMap> = {
+  '17': {
+    weightChallenge: {
+      cravings: 'Reta targets all three appetite pathways simultaneously — GLP-1, GIP, and glucagon — shutting down cravings at the source instead of relying on willpower.',
+      slow_metabolism: 'Your metabolism has adapted. Reta activates the glucagon receptor to force metabolic reactivation — something single-pathway products can\'t do.',
+      belly_fat: 'Stubborn visceral fat requires aggressive metabolic intervention. Reta\'s triple-agonist mechanism targets the hormonal drivers that keep that fat locked in place.',
+      yo_yo: 'Yo-yo dieting breaks single-pathway solutions. Reta works through three separate mechanisms so your body can\'t adapt around it the way it did with diets.',
+    },
+    duration: {
+      years: 'You\'ve been at this for years, which means simpler approaches have failed. Reta is the strongest intervention we offer — built for exactly this situation.',
+      over_a_year: 'Over a year of effort signals real metabolic resistance. Reta\'s triple pathway breaks through where single-target products plateau.',
+      few_months: 'Starting relatively early with a strong match means faster results. Reta gives your body clear, multi-pathway metabolic signals from day one.',
+      just_starting: 'Even as a starting point, Reta\'s multi-pathway approach means you\'re not relying on one mechanism that might not be enough.',
+    },
+    energy: {
+      exhausted: 'Exhaustion is a hallmark of deep metabolic resistance. Reta\'s glucagon pathway directly addresses the energy deficit while tackling weight.',
+      low_all_day: 'Low energy all day suggests your metabolism isn\'t converting fuel efficiently. Reta\'s triple mechanism improves both appetite control and energy output.',
+      afternoon_crash: 'Afternoon crashes often signal blood sugar instability. Reta helps stabilise glucose metabolism alongside appetite control.',
+    },
+    weightOutcome: {
+      major_transform: '92% of quiz-matched customers see measurable results within 30 days. For a major transformation, Reta\'s aggressive triple-pathway approach is specifically designed.',
+      clothing_size: 'Dropping a clothing size requires consistent body composition change. Reta\'s sustained appetite control and metabolic activation deliver that consistently.',
+      lose_5_10: 'For targeted weight loss, Reta provides precise metabolic control without the extreme intervention some users need.',
+      stop_gaining: 'Breaking the weight gain cycle requires resetting your metabolic baseline. Reta\'s multi-pathway signalling does exactly that.',
+    },
+  },
+  '2': {
+    weightChallenge: {
+      cravings: 'Tirzepatide\'s dual GLP-1 + GIP action directly targets appetite signalling — you feel genuinely satisfied with less, not deprived.',
+      slow_metabolism: 'The GIP pathway improves insulin sensitivity and how your body processes energy. Combined with GLP-1 appetite control, it\'s a balanced metabolic reset.',
+      belly_fat: 'Tirzepatide\'s dual mechanism targets both appetite and insulin resistance — two of the key hormonal drivers behind stubborn fat storage.',
+      yo_yo: 'The dual-agonist approach creates sustainable appetite change rather than the temporary suppression that leads to rebound weight gain.',
+    },
+    duration: {
+      years: 'Years of effort suggests you need a structured, reliable approach. Tirzepatide\'s dual mechanism provides consistent results without extreme intervention.',
+      over_a_year: 'After a year or more, your body needs a compound that addresses multiple pathways. Tirzepatide balances appetite control with metabolic efficiency.',
+      few_months: 'A few months in is the perfect window for Tirzepatide — early enough to build momentum, structured enough to sustain it.',
+      just_starting: 'As a starting point, Tirzepatide offers strong but balanced support. Two pathways working together means reliable, steady progress.',
+    },
+    energy: {
+      exhausted: 'Tirzepatide\'s GIP pathway improves how your body uses energy, addressing the fatigue that comes with metabolic inefficiency.',
+      low_all_day: 'The dual mechanism stabilises both appetite and energy metabolism — so you\'re not just eating less, you\'re functioning better.',
+      afternoon_crash: 'GIP signalling directly improves insulin sensitivity, which helps prevent the blood sugar dips that cause afternoon crashes.',
+    },
+    weightOutcome: {
+      major_transform: 'Tirzepatide delivers strong, consistent body composition changes through its dual pathway — structured enough for significant goals.',
+      clothing_size: 'Steady body composition change is Tirzepatide\'s strength. The dual mechanism keeps progress consistent week over week.',
+      lose_5_10: 'For moderate, targeted weight loss, Tirzepatide provides precise dual-pathway support without over-intervention.',
+      stop_gaining: 'Tirzepatide\'s balanced appetite and metabolic signalling helps reset your baseline so weight stabilises naturally.',
+    },
+  },
+  '18': {
+    weightChallenge: {
+      cravings: 'Cagrilintide mimics your body\'s natural "I\'m full" hormone. Instead of fighting cravings with willpower, you genuinely feel satisfied after eating.',
+      slow_metabolism: 'By amplifying satiety signals, Cagrilintide naturally reduces calorie intake — giving your metabolism a chance to catch up without extreme restriction.',
+      belly_fat: 'Cagrilintide targets the fullness pathway specifically, reducing overall calorie intake consistently — which is key for shifting stubborn areas over time.',
+      yo_yo: 'The reason diets fail is hunger eventually wins. Cagrilintide makes you feel full naturally, breaking the restrict-binge cycle that causes rebound.',
+    },
+    duration: {
+      just_starting: 'Cagrilintide is the gentlest entry point in our catalogue. It works with your body\'s existing fullness signals rather than overriding them.',
+      few_months: 'A few months of effort means you understand the basics. Cagrilintide adds a targeted fullness mechanism that makes what you\'re already doing more effective.',
+      over_a_year: 'After a year of struggling with hunger, a dedicated fullness compound targets the exact mechanism that\'s been undermining your progress.',
+      years: 'Years of fighting hunger means you need something that addresses the root cause. Cagrilintide amplifies the satisfaction signal your body already has.',
+    },
+    energy: {
+      exhausted: 'Constant hunger drains energy. By resolving the hunger signal, Cagrilintide frees up the mental and physical energy you\'ve been spending on food resistance.',
+      low_all_day: 'When you\'re not constantly battling appetite, your body redirects that energy. Many users report improved sustained energy within weeks.',
+      afternoon_crash: 'Afternoon crashes often coincide with snacking patterns. Cagrilintide reduces the urge to snack by making meals more satisfying.',
+    },
+    weightOutcome: {
+      major_transform: 'Major transformations start with consistent calorie control. Cagrilintide provides that through natural satiety — no willpower required.',
+      clothing_size: 'Dropping a size comes from sustained, moderate calorie reduction. Cagrilintide\'s fullness mechanism delivers exactly that.',
+      lose_5_10: 'For moderate weight loss, Cagrilintide is often the perfect match — effective enough to see results, gentle enough to sustain them.',
+      stop_gaining: 'Stopping weight gain is about resetting hunger signals. Cagrilintide addresses the exact mechanism that drives overeating.',
+    },
+  },
+  '21': {
+    weightChallenge: {
+      slow_metabolism: 'Reta 2.0\'s enhanced bioavailability delivers stronger metabolic reactivation through the same triple-agonist pathway — maximum intervention for maximum resistance.',
+      belly_fat: 'The enhanced formulation delivers a stronger hormonal signal to mobilise stubborn fat stores — built for profiles where standard formulations aren\'t enough.',
+      cravings: 'Reta 2.0\'s enhanced absorption means stronger appetite suppression through all three pathways from the first week.',
+      yo_yo: 'Enhanced bioavailability means your body gets a clearer, stronger metabolic signal — harder for it to adapt around, which prevents the rebound cycle.',
+    },
+    duration: {
+      years: 'Years of metabolic resistance calls for the strongest tool available. Reta 2.0 is our most aggressive formulation — reserved for exactly this profile.',
+      over_a_year: 'Extended struggle indicates deep metabolic adaptation. Reta 2.0\'s enhanced formula cuts through that resistance more effectively.',
+      few_months: 'Enhanced formulation gives you a head start — stronger signals from day one mean faster initial response.',
+      just_starting: 'Even starting out, the enhanced formula provides clearer metabolic direction, though your practitioner may adjust dosing for your experience level.',
+    },
+    energy: {
+      exhausted: 'Exhaustion paired with metabolic resistance points to deep cellular inefficiency. Reta 2.0\'s enhanced delivery targets this with maximum potency.',
+      low_all_day: 'The enhanced bioavailability means better absorption and utilisation — so the energy and metabolic benefits kick in faster.',
+      afternoon_crash: 'Enhanced formula means more consistent metabolic signalling throughout the day, reducing the energy fluctuations that cause crashes.',
+    },
+    weightOutcome: {
+      major_transform: 'For a major transformation, Reta 2.0\'s enhanced potency is specifically designed to deliver aggressive, measurable results.',
+      clothing_size: 'Enhanced bioavailability means faster, more visible body composition changes week over week.',
+      lose_5_10: 'The enhanced formula achieves targeted results efficiently — often faster than standard formulations for moderate goals.',
+      stop_gaining: 'Breaking the gain cycle requires a strong reset. Reta 2.0\'s enhanced delivery provides the clearest metabolic signal available.',
+    },
+  },
+}
+
+const STRENGTH_REASONS: Record<string, AnswerReasonMap> = {
+  '8': {
+    fitnessChallenge: {
+      soreness: 'BPC-157 accelerates connective tissue repair and reduces inflammation — so the micro-damage from training heals faster and you\'re not sore for days.',
+      plateau: 'Plateaus often come from accumulated micro-injuries limiting intensity. BPC-157 repairs that underlying tissue damage so you can push harder again.',
+      nagging_injury: 'BPC-157 is the most studied compound for tissue repair. It promotes new blood vessel growth directly to injury sites and accelerates healing.',
+      slower_recovery: 'Recovery slows because tissue repair mechanisms decline with age. BPC-157 directly supports the angiogenesis and repair pathways that have weakened.',
+    },
+    duration: {
+      just_starting: 'Starting with BPC-157 means you\'re addressing recovery from the foundation up — before cumulative damage becomes a bigger problem.',
+      few_months: 'A few months of accumulated training stress responds well to targeted repair. BPC-157 clears the backlog and keeps you progressing.',
+      over_a_year: 'Over a year of stress without adequate repair means tissue damage has accumulated. BPC-157 specifically targets that repair deficit.',
+      years: 'Years of training means years of accumulated micro-damage. BPC-157\'s broad tissue repair mechanism addresses the full history, not just recent sessions.',
+    },
+    activityLevel: {
+      '1_2_days': 'Even at lower training volume, recovery matters. BPC-157 ensures each session\'s damage is fully repaired before the next.',
+      '3_4_days': 'Training 3–4 days creates a recovery demand that BPC-157 supports — enough repair between sessions to keep progressing.',
+      '5_6_days': 'At this volume, recovery becomes the limiting factor. BPC-157\'s repair acceleration is critical to sustaining that workload.',
+      every_day: 'Daily training means zero recovery margin. BPC-157 provides the tissue repair support your body needs to handle that demand.',
+    },
+    fitnessOutcome: {
+      pain_free: 'Pain-free training starts with healing what\'s damaged. BPC-157 targets tissue repair at the source — tendons, ligaments, and connective tissue.',
+      break_plateaus: 'Breaking plateaus means training harder. BPC-157 clears the tissue damage holding you back so you can increase intensity safely.',
+      recover_faster: 'Faster recovery is BPC-157\'s primary mechanism. It accelerates the healing process your body already uses, cutting days off recovery time.',
+      stay_strong_aging: 'Aging slows tissue repair. BPC-157 supports the repair mechanisms that decline with age, keeping recovery rates closer to your peak.',
+    },
+  },
+  '10': {
+    fitnessChallenge: {
+      soreness: 'TB-500 promotes cell migration to damaged areas throughout your body — reducing the widespread soreness that comes from intense training.',
+      plateau: 'TB-500 improves systemic recovery capacity, meaning you can handle more volume and intensity — the two things that break plateaus.',
+      nagging_injury: 'TB-500 supports both local repair and system-wide recovery, helping resolve persistent injuries while maintaining overall training capacity.',
+      slower_recovery: 'TB-500 directly addresses the cellular migration and repair processes that slow down with age — restoring recovery speed at the systemic level.',
+    },
+    duration: {
+      just_starting: 'TB-500 sets up strong systemic recovery from the start — building the repair capacity you need as training intensity increases.',
+      few_months: 'A few months of training means your body is adapting to new demands. TB-500 ensures recovery keeps pace with your increasing workload.',
+      over_a_year: 'Sustained training builds cumulative systemic stress. TB-500 restores the system-wide recovery capacity that hard training depletes.',
+      years: 'Years of training creates deep systemic recovery debt. TB-500\'s whole-body repair mechanism addresses recovery at the level you need.',
+    },
+    activityLevel: {
+      '3_4_days': 'At 3–4 days, systemic recovery becomes important. TB-500 ensures your whole body — not just specific muscles — recovers between sessions.',
+      '5_6_days': 'Training 5–6 days means recovery is your bottleneck. TB-500\'s systemic approach keeps pace with high training frequency.',
+      every_day: 'Daily training requires exceptional recovery capacity. TB-500 accelerates cell migration and repair throughout your entire body.',
+      '1_2_days': 'Even with less frequent training, systemic recovery affects how productive each session is. TB-500 ensures you get maximum benefit.',
+    },
+    fitnessOutcome: {
+      pain_free: 'TB-500 reduces systemic inflammation and promotes repair — addressing the widespread aches that accumulate from training stress.',
+      break_plateaus: 'Better systemic recovery means you can train harder and more often. TB-500 gives you the recovery capacity to push past your plateau.',
+      recover_faster: 'This is TB-500\'s core function — accelerating cell migration to damaged areas so your recovery time drops measurably.',
+      stay_strong_aging: 'TB-500 counteracts the systemic recovery decline that comes with age, helping maintain the training capacity you had years ago.',
+    },
+  },
+  '20': {
+    fitnessChallenge: {
+      soreness: 'Wolverine combines targeted tissue repair (BPC-157) with systemic recovery (TB-500) — addressing both the injury site and overall soreness simultaneously.',
+      plateau: 'Plateaus happen when recovery can\'t match training demand. Wolverine provides both localised repair and system-wide recovery to break through.',
+      nagging_injury: 'Wolverine is the "fix everything" option — BPC-157 heals the specific injury while TB-500 restores the systemic recovery your body has been borrowing from.',
+      slower_recovery: 'Age-related recovery decline hits both locally and systemically. Wolverine addresses both pathways simultaneously — the most comprehensive recovery option we offer.',
+    },
+    duration: {
+      years: 'Years of accumulated damage needs a comprehensive approach. Wolverine combines local tissue repair and systemic recovery in one protocol.',
+      over_a_year: 'Extended training creates both specific damage and systemic recovery debt. Wolverine addresses both — which is why it scored highest for your profile.',
+      few_months: 'Even early on, combining local and systemic recovery prevents the damage accumulation that slows progress later.',
+      just_starting: 'Starting with comprehensive recovery support means building on a solid foundation — addressing damage before it becomes chronic.',
+    },
+    activityLevel: {
+      '5_6_days': 'At this frequency, you need both local repair and systemic recovery. Wolverine\'s dual mechanism matches this demand.',
+      every_day: 'Daily training demands the most comprehensive recovery support available. Wolverine\'s combined pathways are built for this workload.',
+      '3_4_days': 'Moderate-high training benefits from comprehensive recovery. Wolverine ensures both specific damage and overall fatigue are addressed.',
+      '1_2_days': 'Even with lower volume, combining tissue repair and systemic recovery maximises the benefit from every session.',
+    },
+    fitnessOutcome: {
+      pain_free: 'Wolverine attacks pain from both angles — BPC-157 repairs damaged tissue while TB-500 reduces systemic inflammation. The fastest path to pain-free training.',
+      break_plateaus: 'Comprehensive recovery means higher training capacity. Wolverine removes recovery as the bottleneck so you can increase volume and intensity.',
+      recover_faster: 'Two complementary recovery pathways working simultaneously means faster results than either compound alone.',
+      stay_strong_aging: 'Aging affects both local tissue repair and systemic recovery. Wolverine addresses both declines in one protocol.',
+    },
+  },
+}
+
+const CELLULAR_REASONS: Record<string, AnswerReasonMap> = {
+  '4': {
+    agingConcern: {
+      skin: 'GHK-Cu is the gold standard for collagen and elastin production. It directly tells your skin cells to rebuild the structural proteins that keep skin firm and youthful.',
+      energy_mental: 'GHK-Cu supports cellular repair broadly, including skin cells that reflect your internal health. Improved skin quality often correlates with better overall cellular function.',
+      joint_stiffness: 'GHK-Cu promotes connective tissue repair and collagen synthesis — which supports joint health alongside visible skin improvements.',
+      all_of_it: 'GHK-Cu rebuilds the extracellular matrix — the structural foundation of your skin, joints, and connective tissue. It addresses aging at the structural level.',
+    },
+    duration: {
+      just_starting: 'GHK-Cu is one of the best-studied and safest starting points for visible anti-aging results. You\'ll see changes in your skin within weeks.',
+      few_months: 'A few months of awareness means you\'re ready for targeted action. GHK-Cu delivers visible skin results faster than most alternatives.',
+      over_a_year: 'Over a year of skin changes means collagen loss has accelerated. GHK-Cu directly stimulates the production your skin needs to recover.',
+      years: 'Years of collagen decline requires direct intervention. GHK-Cu is the most studied compound for rebuilding what time has taken.',
+    },
+    agingOutcome: {
+      skin_hair: 'This is GHK-Cu\'s primary domain — collagen and elastin production for visible improvements in skin firmness, texture, and hair quality.',
+      energy_clarity: 'GHK-Cu\'s cellular repair benefits extend beyond skin — improved cellular function supports energy and clarity as a secondary benefit.',
+      sleep_stress: 'Better cellular health through GHK-Cu supports the repair processes your body performs during sleep, potentially improving rest quality.',
+      overall_vitality: 'GHK-Cu rebuilds your body\'s structural foundation — the extracellular matrix — which supports multiple systems simultaneously.',
+    },
+  },
+  '6': {
+    agingConcern: {
+      skin: 'Glow combines GHK-Cu (collagen rebuilding) with BPC-157 and TB-500 (tissue repair) — addressing skin quality from both the structural and repair pathways.',
+      energy_mental: 'Glow\'s triple stack addresses cellular repair (BPC-157), recovery (TB-500), and structural renewal (GHK-Cu) — supporting energy through comprehensive cellular rejuvenation.',
+      joint_stiffness: 'Glow combines tissue repair (BPC-157 + TB-500) with structural renewal (GHK-Cu) — the most comprehensive approach for joint health and visible aging.',
+      all_of_it: 'You want to address everything — Glow was built for exactly that. Three complementary pathways working on repair, recovery, and renewal simultaneously.',
+    },
+    duration: {
+      years: 'Years of aging calls for the most comprehensive intervention. Glow\'s triple stack addresses repair, recovery, and renewal in one protocol.',
+      over_a_year: 'Extended concern about aging means multiple systems need attention. Glow\'s three pathways address them simultaneously.',
+      few_months: 'Starting a comprehensive protocol early means you\'re ahead of the curve. Glow sets up all three renewal pathways from day one.',
+      just_starting: 'Glow is comprehensive but well-studied. Each component has an established safety profile, and your practitioner guides everything.',
+    },
+    agingOutcome: {
+      skin_hair: 'Glow delivers visible skin results through GHK-Cu while BPC-157 and TB-500 accelerate the underlying tissue repair that supports lasting improvements.',
+      energy_clarity: 'The repair and recovery components (BPC-157 + TB-500) address cellular function while GHK-Cu rebuilds structure — comprehensive energy renewal.',
+      sleep_stress: 'Glow\'s systemic repair mechanisms support the cellular processes your body relies on during sleep and stress recovery.',
+      overall_vitality: 'Overall vitality requires a comprehensive approach. Glow\'s three pathways address repair, recovery, and renewal simultaneously — exactly what "age better" requires.',
+    },
+  },
+  '19': {
+    agingConcern: {
+      energy_mental: 'MOTC targets mitochondria — your cells\' power plants. When they decline, energy and mental sharpness go first. MOTC directly recharges cellular energy production.',
+      skin: 'Mitochondrial health affects every cell, including skin. MOTC improves cellular energy production, which supports skin cell renewal as a downstream benefit.',
+      joint_stiffness: 'Cellular energy decline affects repair capacity. MOTC restores mitochondrial function so your cells have the energy to repair and maintain joint tissue.',
+      all_of_it: 'Mitochondria power everything in your body. MOTC improves cellular energy production at the source — which cascades into energy, clarity, skin, and recovery.',
+    },
+    duration: {
+      just_starting: 'MOTC addresses the foundational issue — cellular energy production. Starting here means every other health improvement has better fuel to work with.',
+      few_months: 'A few months of declining energy points to mitochondrial slowdown. MOTC targets this at the cellular level rather than masking it with stimulants.',
+      over_a_year: 'Sustained energy decline is a clear mitochondrial signal. MOTC directly restores the cellular energy machinery that\'s been declining.',
+      years: 'Years of declining energy means deep mitochondrial deficit. MOTC is the most direct intervention for restoring cellular energy production.',
+    },
+    agingOutcome: {
+      energy_clarity: 'This is exactly what MOTC does — improves mitochondrial energy production, which directly translates to sustained energy and sharper mental clarity.',
+      skin_hair: 'Mitochondrial health drives skin cell turnover. MOTC improves the energy available for cellular repair and renewal, supporting skin quality.',
+      sleep_stress: 'Better cellular energy production improves your body\'s capacity for recovery and stress resilience — starting at the mitochondrial level.',
+      overall_vitality: 'Mitochondria are the foundation of vitality. MOTC restores energy production at the cellular level, supporting every system that depends on it.',
+    },
+  },
+  '7': {
+    agingConcern: {
+      energy_mental: 'NAD+ is the central coenzyme in cellular energy metabolism. Your levels naturally decline with age — restoring them directly addresses energy and cognitive function.',
+      skin: 'NAD+ supports DNA repair in every cell, including skin cells. Restored NAD+ levels improve cellular repair capacity, which benefits skin health.',
+      joint_stiffness: 'NAD+ decline affects cellular repair throughout your body. Restoring levels supports the repair processes joints depend on.',
+      all_of_it: 'NAD+ sits at the centre of cellular energy, DNA repair, and metabolic function. Declining levels affect everything — restoring them addresses aging at the most fundamental level.',
+    },
+    duration: {
+      just_starting: 'NAD+ supplementation is one of the most foundational anti-aging interventions. It restores the coenzyme every cell needs to function optimally.',
+      few_months: 'A few months of awareness means you\'re ready for a foundation-level intervention. NAD+ restores what time naturally depletes.',
+      over_a_year: 'Over a year of concern signals real decline. NAD+ directly restores the cellular coenzyme that drops steadily with age.',
+      years: 'Years of decline points to a significant NAD+ deficit. Direct supplementation restores the foundational molecule your cells have been losing.',
+    },
+    agingOutcome: {
+      energy_clarity: 'NAD+ is the coenzyme your cells use to produce energy. Restoring levels directly improves both sustained energy and mental clarity.',
+      skin_hair: 'NAD+ powers the DNA repair mechanisms that keep skin cells healthy. Restored levels support skin quality from the inside out.',
+      sleep_stress: 'NAD+ supports the cellular repair processes that happen during sleep. Restored levels improve both sleep quality and stress resilience.',
+      overall_vitality: 'NAD+ is the most foundational molecule in cellular health. Restoring it improves energy, repair, and metabolic function simultaneously.',
+    },
+  },
+}
+
+const ALL_ANSWER_REASONS: Record<string, Record<string, AnswerReasonMap>> = {
+  weight_management: WEIGHT_REASONS,
+  strength_recovery: STRENGTH_REASONS,
+  cellular_repair: CELLULAR_REASONS,
+}
+
+export function getAnswerReasons(
+  compoundId: string,
+  goal: string,
+  answers: Record<string, unknown>,
+  level: ExperienceLevel = 'intermediate',
+): AnswerReason[] {
+  const goalMap = ALL_ANSWER_REASONS[goal]
+  if (!goalMap) return []
+  const compoundMap = goalMap[compoundId]
+  if (!compoundMap) return []
+
+  const fieldLabels: Record<string, string> = {
+    weightChallenge: 'Your main challenge',
+    fitnessChallenge: 'Your main frustration',
+    agingConcern: 'Your top concern',
+    duration: 'How long you\'ve been at this',
+    energy: 'Your energy level',
+    weightOutcome: 'Your 90-day goal',
+    fitnessOutcome: 'Your ideal outcome',
+    agingOutcome: 'Where you want results first',
+    activityLevel: 'Your activity level',
+  }
+
+  const answerLabels: Record<string, Record<string, string>> = {
+    weightChallenge: { cravings: 'Cravings and appetite', slow_metabolism: 'Slow metabolism', belly_fat: 'Stubborn belly fat', yo_yo: 'Yo-yo weight cycling' },
+    fitnessChallenge: { soreness: 'Post-training soreness', plateau: 'Strength plateau', nagging_injury: 'Nagging injury', slower_recovery: 'Slower recovery' },
+    agingConcern: { skin: 'Skin changes', energy_mental: 'Energy and sharpness decline', joint_stiffness: 'Joint stiffness', all_of_it: 'Overall aging' },
+    duration: { just_starting: 'Just getting started', few_months: 'A few months', over_a_year: 'Over a year', years: 'Years of effort' },
+    energy: { great: 'Great energy', afternoon_crash: 'Afternoon crashes', low_all_day: 'Low all day', exhausted: 'Exhausted' },
+    weightOutcome: { lose_5_10: 'Lose 5–10 lbs', clothing_size: 'Drop a clothing size', major_transform: 'Major transformation', stop_gaining: 'Stop gaining' },
+    fitnessOutcome: { pain_free: 'Train pain-free', break_plateaus: 'Break plateaus', recover_faster: 'Recover faster', stay_strong_aging: 'Stay strong with age' },
+    agingOutcome: { skin_hair: 'Skin & hair', energy_clarity: 'Energy & clarity', sleep_stress: 'Sleep & stress', overall_vitality: 'Overall vitality' },
+    activityLevel: { '1_2_days': '1–2 days/week', '3_4_days': '3–4 days/week', '5_6_days': '5–6 days/week', every_day: 'Every day' },
+  }
+
+  const results: AnswerReason[] = []
+
+  const challengeField = goal === 'weight_management' ? 'weightChallenge'
+    : goal === 'strength_recovery' ? 'fitnessChallenge'
+    : 'agingConcern'
+  const outcomeField = goal === 'weight_management' ? 'weightOutcome'
+    : goal === 'strength_recovery' ? 'fitnessOutcome'
+    : 'agingOutcome'
+  const activityField = goal === 'strength_recovery' ? 'activityLevel' : null
+
+  const orderedFields = [challengeField, 'duration', 'energy', ...(activityField ? [activityField] : []), outcomeField]
+
+  for (const field of orderedFields) {
+    const val = answers[field] as string | undefined
+    if (!val) continue
+    const reasons = compoundMap[field]
+    if (!reasons || !reasons[val]) continue
+
+    let reason = reasons[val]
+    if (level === 'beginner') {
+      reason = reason
+        .replace(/GLP-1/g, 'appetite pathway')
+        .replace(/GIP/g, 'energy pathway')
+        .replace(/glucagon/g, 'fat-burning pathway')
+        .replace(/angiogenesis/g, 'new blood vessel growth')
+        .replace(/mitochondria/g, 'cellular power plants')
+        .replace(/mitochondrial/g, 'cellular energy')
+        .replace(/coenzyme/g, 'cellular molecule')
+        .replace(/extracellular matrix/g, 'structural foundation')
+    }
+
+    results.push({
+      label: fieldLabels[field] ?? field,
+      answer: answerLabels[field]?.[val] ?? val,
+      reason,
+    })
+  }
+
+  return results.slice(0, 4)
+}
