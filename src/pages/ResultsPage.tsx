@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { PEPTIDES, type Peptide, getBasePrice, recommendedDoseIndex } from '../data/peptides'
+import { PEPTIDES, type Peptide, recommendedDoseIndex } from '../data/peptides'
 import { recommendPeptides } from '../lib/recommend'
 import { benefitHeadline, benefitSubline, getExperienceLevel, pillarDetailSummary, goalLabel } from '../lib/quizLabels'
 import { loadQuiz } from '../lib/quizStorage'
