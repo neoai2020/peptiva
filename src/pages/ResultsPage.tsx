@@ -107,14 +107,15 @@ export default function ResultsPage() {
           <div className="fp-hero-grid">
             <div className="fp-hero-content">
               <ul className="fp-hero-advantages">
-                <li><CheckIcon /> <strong>Your match: {primary.sku}</strong> — from £{primaryPrice.now}</li>
-                <li><CheckIcon /> <strong>99.3%+ verified purity</strong> — independently lab tested</li>
-                <li><CheckIcon /> <strong>Practitioner support included</strong> — a real person guides your protocol</li>
+                <li><CheckIcon /> Your match: <strong>{primary.sku}</strong> — from £{primaryPrice.now}</li>
+                <li><CheckIcon /> 99.3%+ verified purity</li>
+                <li><CheckIcon /> Practitioner support included</li>
                 {isBeginner
-                  ? <li><CheckIcon /> <strong>Beginner-friendly</strong> — clear instructions, gentle start, full support</li>
-                  : <li><CheckIcon /> <strong>Full batch documentation</strong> — QR-verified, traceable, auditable</li>
+                  ? <li><CheckIcon /> Beginner-friendly with full guidance</li>
+                  : <li><CheckIcon /> Full batch documentation</li>
                 }
-                <li><CheckIcon /> <strong>30-day quality guarantee</strong> — not happy? We make it right</li>
+                <li><CheckIcon /> 30-day quality guarantee</li>
+                <li><CheckIcon /> Free tracked UK shipping</li>
               </ul>
               <a href="#plans" className="fp-btn fp-hero-cta-btn">Claim My Match — £{primaryPrice.now}</a>
             </div>
