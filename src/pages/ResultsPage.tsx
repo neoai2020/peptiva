@@ -1,11 +1,110 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PEPTIDES, type Peptide, recommendedDoseIndex } from '../data/peptides'
 import { recommendPeptides } from '../lib/recommend'
-import { benefitHeadline, benefitSubline, getExperienceLevel, pillarDetailSummary } from '../lib/quizLabels'
+import { benefitHeadline, benefitSubline, durationLabel, energyLabel, getExperienceLevel, goalLabel, pillarDetailSummary, subFocusSummary } from '../lib/quizLabels'
 import { loadQuiz } from '../lib/quizStorage'
 import { defaultQuizAnswers } from '../types/quiz'
 import { getCompoundCopy } from '../lib/compoundCopy'
+
+const PILLAR_CATEGORY: Record<string, string> = {
+  weight_management: 'Weight management',
+  strength_recovery: 'Strength & recovery',
+  cellular_repair: 'Cellular repair & anti-aging',
+}
+
+function useReveal<T extends HTMLElement>(): [React.RefObject<T | null>, boolean] {
+  const ref = useRef<T | null>(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect() } },
+      { threshold: 0.15 },
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+  return [ref, visible]
+}
+
+function ProfileCard({
+  goal, challenge, energy, duration, outcome, level,
+}: {
+  goal: string; challenge: string; energy: string; duration: string; outcome: string | null; level: string
+}) {
+  const [ref, visible] = useReveal<HTMLDivElement>()
+  const items = [
+    { icon: '🎯', label: 'Goal', value: goal },
+    { icon: '⚡', label: 'Main challenge', value: challenge },
+    { icon: '🔋', label: 'Energy', value: energy },
+    { icon: '⏳', label: 'Duration', value: duration },
+    ...(outcome ? [{ icon: '🏁', label: '90-day target', value: outcome }] : []),
+    { icon: '📊', label: 'Experience', value: level.charAt(0).toUpperCase() + level.slice(1) },
+  ]
+  return (
+    <div ref={ref} className={`tsl-profile ${visible ? 'is-visible' : ''}`}>
+      <h2 className="tsl-profile-title">Your profile</h2>
+      <div className="tsl-profile-grid">
+        {items.map((it) => (
+          <div key={it.label} className="tsl-profile-item">
+            <span className="tsl-profile-icon" aria-hidden>{it.icon}</span>
+            <div>
+              <span className="tsl-profile-label">{it.label}</span>
+              <span className="tsl-profile-value">{it.value}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function MatchChart({
+  scores, goal, primaryId,
+}: {
+  scores: Record<string, number>; goal: string; primaryId: string
+}) {
+  const [ref, visible] = useReveal<HTMLDivElement>()
+  const category = PILLAR_CATEGORY[goal]
+  const items = PEPTIDES
+    .filter((p) => p.category === category)
+    .map((p) => ({ id: p.id, sku: p.sku, score: scores[p.id] ?? 0 }))
+    .sort((a, b) => b.score - a.score)
+  const maxScore = items[0]?.score || 1
+  return (
+    <div ref={ref} className={`tsl-chart ${visible ? 'is-visible' : ''}`}>
+      <h2 className="tsl-chart-title">Your match ranking</h2>
+      <p className="tsl-chart-sub">{category} — scored across your quiz answers</p>
+      <div className="tsl-chart-bars">
+        {items.map((it, i) => {
+          const pct = Math.max(8, (it.score / maxScore) * 100)
+          const isMatch = it.id === primaryId
+          return (
+            <div key={it.id} className={`tsl-bar-row ${isMatch ? 'tsl-bar-row--match' : ''}`}>
+              <span className="tsl-bar-label">{it.sku}</span>
+              <div className="tsl-bar-track">
+                <div
+                  className="tsl-bar-fill"
+                  style={{
+                    width: visible ? `${pct}%` : '0%',
+                    transitionDelay: `${i * 120}ms`,
+                  }}
+                />
+              </div>
+              <span className="tsl-bar-score">{it.score} pts</span>
+              {isMatch && <span className="tsl-bar-badge">YOUR MATCH</span>}
+            </div>
+          )
+        })}
+      </div>
+      <p className="tsl-chart-note">
+        Scored across {PEPTIDES.length} products using your specific quiz answers
+      </p>
+    </div>
+  )
+}
 
 function getPrice(peptide: Peptide, level: 'beginner' | 'intermediate' | 'advanced' = 'intermediate') {
   const idx = recommendedDoseIndex(peptide, level)
@@ -62,7 +161,7 @@ export default function ResultsPage() {
   }
 
   const merged = { ...defaultQuizAnswers(), ...answers }
-  const { primary } = rec
+  const { primary, scores } = rec
   const level = getExperienceLevel(merged)
   const isBeginner = level === 'beginner'
   const detail = pillarDetailSummary(merged)
@@ -134,6 +233,27 @@ export default function ResultsPage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ── YOUR PROFILE ── */}
+      <section className="fp-section">
+        <div className="fp-container">
+          <ProfileCard
+            goal={goalLabel(merged.goal!)}
+            challenge={detail}
+            energy={merged.energy ? energyLabel(merged.energy) : 'Not specified'}
+            duration={merged.duration ? durationLabel(merged.duration) : 'Not specified'}
+            outcome={subFocusSummary(merged)}
+            level={level}
+          />
+        </div>
+      </section>
+
+      {/* ── MATCH RANKING CHART ── */}
+      <section className="fp-section fp-section--alt">
+        <div className="fp-container">
+          <MatchChart scores={scores} goal={merged.goal!} primaryId={primary.id} />
         </div>
       </section>
 
