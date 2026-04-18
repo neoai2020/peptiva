@@ -375,6 +375,7 @@ h1, h2, h3 {
 .funnel-shell .cap-input::placeholder { color: #94a3b8; }
 .funnel-shell .cap-error { color: #ef4444; }
 .funnel-shell .cap-legal { color: var(--funnel-text-muted); }
+.funnel-shell .cap-social { background: rgba(255, 255, 255, 0.78); border-color: var(--funnel-border); }
 .funnel-shell .cap-social-quote { color: var(--funnel-text); }
 .funnel-shell .cap-social-name { color: var(--funnel-text-muted); }
 .funnel-shell .cap-urgency { color: var(--funnel-text-muted); background: rgba(5, 150, 105, 0.06); border-color: rgba(5, 150, 105, 0.15); }
