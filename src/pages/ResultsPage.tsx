@@ -13,20 +13,23 @@ const PILLAR_CATEGORY: Record<string, string> = {
   cellular_repair: 'Cellular repair & anti-aging',
 }
 
-function useReveal<T extends HTMLElement>(): [React.RefObject<T | null>, boolean] {
-  const ref = useRef<T | null>(null)
-  const [visible, setVisible] = useState(false)
+/* ── Animated counter hook ── */
+function useCountUp(target: number, active: boolean, durationMs = 1200): number {
+  const [val, setVal] = useState(0)
   useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect() } },
-      { threshold: 0.15 },
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [])
-  return [ref, visible]
+    if (!active) return
+    const start = performance.now()
+    let raf: number
+    const tick = (now: number) => {
+      const t = Math.min((now - start) / durationMs, 1)
+      const ease = 1 - Math.pow(1 - t, 3)
+      setVal(Math.round(ease * target))
+      if (t < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [target, active, durationMs])
+  return val
 }
 
 function ProfileCard({
@@ -34,26 +37,43 @@ function ProfileCard({
 }: {
   goal: string; challenge: string; energy: string; duration: string; outcome: string | null; level: string
 }) {
-  const [ref, visible] = useReveal<HTMLDivElement>()
+  const [visible, setVisible] = useState(false)
+  const ref = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } },
+      { threshold: 0.1 },
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
   const items = [
     { icon: '🎯', label: 'Goal', value: goal },
-    { icon: '⚡', label: 'Main challenge', value: challenge },
+    { icon: '⚡', label: 'Challenge', value: challenge },
     { icon: '🔋', label: 'Energy', value: energy },
     { icon: '⏳', label: 'Duration', value: duration },
     ...(outcome ? [{ icon: '🏁', label: '90-day target', value: outcome }] : []),
     { icon: '📊', label: 'Experience', value: level.charAt(0).toUpperCase() + level.slice(1) },
   ]
   return (
-    <div ref={ref} className={`tsl-profile ${visible ? 'is-visible' : ''}`}>
-      <h2 className="tsl-profile-title">Your profile</h2>
-      <div className="tsl-profile-grid">
-        {items.map((it) => (
-          <div key={it.label} className="tsl-profile-item">
-            <span className="tsl-profile-icon" aria-hidden>{it.icon}</span>
-            <div>
-              <span className="tsl-profile-label">{it.label}</span>
-              <span className="tsl-profile-value">{it.value}</span>
-            </div>
+    <div ref={ref} className={`rp-profile ${visible ? 'rp-profile--in' : ''}`}>
+      <div className="rp-profile-head">
+        <span className="rp-profile-dot" />
+        <h2 className="rp-profile-title">Your Quiz Profile</h2>
+      </div>
+      <div className="rp-profile-grid">
+        {items.map((it, i) => (
+          <div
+            key={it.label}
+            className={`rp-profile-item ${visible ? 'rp-profile-item--in' : ''}`}
+            style={{ transitionDelay: `${i * 70}ms` }}
+          >
+            <span className="rp-profile-icon" aria-hidden>{it.icon}</span>
+            <span className="rp-profile-label">{it.label}</span>
+            <span className="rp-profile-value">{it.value}</span>
           </div>
         ))}
       </div>
@@ -62,45 +82,84 @@ function ProfileCard({
 }
 
 function MatchChart({
-  scores, goal, primaryId,
+  scores, goal, primaryId, matchName,
 }: {
-  scores: Record<string, number>; goal: string; primaryId: string
+  scores: Record<string, number>; goal: string; primaryId: string; matchName: string
 }) {
-  const [ref, visible] = useReveal<HTMLDivElement>()
+  const [visible, setVisible] = useState(false)
+  const ref = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } },
+      { threshold: 0.1 },
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
   const category = PILLAR_CATEGORY[goal]
   const items = PEPTIDES
     .filter((p) => p.category === category)
     .map((p) => ({ id: p.id, sku: p.sku, score: scores[p.id] ?? 0 }))
     .sort((a, b) => b.score - a.score)
   const maxScore = items[0]?.score || 1
+  const topScore = items[0]?.score ?? 0
+  const animatedTop = useCountUp(topScore, visible)
+  const total = items.reduce((s, it) => s + it.score, 0)
+  const matchPct = total > 0 ? Math.round((topScore / total) * 100) : 0
+  const animatedPct = useCountUp(matchPct, visible)
+
   return (
-    <div ref={ref} className={`tsl-chart ${visible ? 'is-visible' : ''}`}>
-      <h2 className="tsl-chart-title">Your match ranking</h2>
-      <p className="tsl-chart-sub">{category} — scored across your quiz answers</p>
-      <div className="tsl-chart-bars">
+    <div ref={ref} className={`rp-chart ${visible ? 'rp-chart--in' : ''}`}>
+      <div className="rp-chart-header">
+        <h2 className="rp-chart-title">Your match ranking</h2>
+        <p className="rp-chart-sub">{category}</p>
+      </div>
+
+      <div className="rp-chart-stats">
+        <div className="rp-stat">
+          <span className="rp-stat-num">{animatedTop}</span>
+          <span className="rp-stat-label">Match points</span>
+        </div>
+        <div className="rp-stat rp-stat--accent">
+          <span className="rp-stat-num">{animatedPct}%</span>
+          <span className="rp-stat-label">Match strength</span>
+        </div>
+        <div className="rp-stat">
+          <span className="rp-stat-num">{items.length}</span>
+          <span className="rp-stat-label">Products scored</span>
+        </div>
+      </div>
+
+      <div className="rp-chart-bars">
         {items.map((it, i) => {
-          const pct = Math.max(8, (it.score / maxScore) * 100)
+          const pct = Math.max(6, (it.score / maxScore) * 100)
           const isMatch = it.id === primaryId
           return (
-            <div key={it.id} className={`tsl-bar-row ${isMatch ? 'tsl-bar-row--match' : ''}`}>
-              <span className="tsl-bar-label">{it.sku}</span>
-              <div className="tsl-bar-track">
+            <div key={it.id} className={`rp-bar ${isMatch ? 'rp-bar--match' : ''}`}>
+              <div className="rp-bar-meta">
+                <span className="rp-bar-name">{it.sku}</span>
+                {isMatch && <span className="rp-bar-badge">#1 MATCH</span>}
+                <span className="rp-bar-pts">{it.score} pts</span>
+              </div>
+              <div className="rp-bar-track">
                 <div
-                  className="tsl-bar-fill"
+                  className="rp-bar-fill"
                   style={{
                     width: visible ? `${pct}%` : '0%',
-                    transitionDelay: `${i * 120}ms`,
+                    transitionDelay: `${i * 150 + 300}ms`,
                   }}
                 />
               </div>
-              <span className="tsl-bar-score">{it.score} pts</span>
-              {isMatch && <span className="tsl-bar-badge">YOUR MATCH</span>}
             </div>
           )
         })}
       </div>
-      <p className="tsl-chart-note">
-        Scored across {PEPTIDES.length} products using your specific quiz answers
+
+      <p className="rp-chart-foot">
+        Scored across {PEPTIDES.length} products · <strong>{matchName}</strong> is your strongest match
       </p>
     </div>
   )
@@ -194,6 +253,36 @@ export default function ResultsPage() {
         </div>
       </header>
 
+      {/* ── YOUR PROFILE + MATCH CHART (top of page) ── */}
+      <section className="rp-results-hero">
+        <div className="fp-container">
+          <p className="rp-results-eyebrow">YOUR RESULTS ARE IN</p>
+          <h1 className="rp-results-title">
+            {name !== 'there' ? `${name}, here's what we found` : 'Here\'s what we found'}
+          </h1>
+          <p className="rp-results-sub">
+            We scored {PEPTIDES.filter(p => p.category === PILLAR_CATEGORY[merged.goal!]).length} products
+            in {goalLabel(merged.goal!).toLowerCase()} against your quiz answers.
+          </p>
+        </div>
+      </section>
+
+      <section className="rp-data-section">
+        <div className="fp-container">
+          <div className="rp-data-grid">
+            <ProfileCard
+              goal={goalLabel(merged.goal!)}
+              challenge={detail}
+              energy={merged.energy ? energyLabel(merged.energy) : 'Not specified'}
+              duration={merged.duration ? durationLabel(merged.duration) : 'Not specified'}
+              outcome={subFocusSummary(merged)}
+              level={level}
+            />
+            <MatchChart scores={scores} goal={merged.goal!} primaryId={primary.id} matchName={primary.sku} />
+          </div>
+        </div>
+      </section>
+
       {/* ── HERO ── */}
       <section className="fp-hero">
         <div className="fp-container">
@@ -233,27 +322,6 @@ export default function ResultsPage() {
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* ── YOUR PROFILE ── */}
-      <section className="fp-section">
-        <div className="fp-container">
-          <ProfileCard
-            goal={goalLabel(merged.goal!)}
-            challenge={detail}
-            energy={merged.energy ? energyLabel(merged.energy) : 'Not specified'}
-            duration={merged.duration ? durationLabel(merged.duration) : 'Not specified'}
-            outcome={subFocusSummary(merged)}
-            level={level}
-          />
-        </div>
-      </section>
-
-      {/* ── MATCH RANKING CHART ── */}
-      <section className="fp-section fp-section--alt">
-        <div className="fp-container">
-          <MatchChart scores={scores} goal={merged.goal!} primaryId={primary.id} />
         </div>
       </section>
 
