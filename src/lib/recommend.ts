@@ -1,11 +1,20 @@
 import type { Peptide } from '../data/peptides'
-import { PEPTIDES } from '../data/peptides'
+import { PEPTIDES, getPeptideById, recommendedDoseIndex } from '../data/peptides'
+import { SYNERGY } from '../data/synergyMap'
 import type { PrimaryGoal, QuizAnswers } from '../types/quiz'
 
 export interface RecommendationResult {
   primary: Peptide
   secondary: Peptide | null
   scores: Record<string, number>
+}
+
+export interface StackSuggestion {
+  peptide: Peptide
+  reason: string
+  discountPct: number
+  originalPrice: number
+  discountedPrice: number
 }
 
 const PILLAR_CATEGORY: Record<PrimaryGoal, string> = {
@@ -177,4 +186,30 @@ export function recommendPeptides(answers: QuizAnswers): RecommendationResult {
   const scores = scoreFor(answers)
   const { primary, secondary } = pickTopTwo(scores, answers)
   return { primary, secondary, scores }
+}
+
+export function getStackRecommendations(
+  primary: Peptide,
+  level: 'beginner' | 'intermediate' | 'advanced' = 'intermediate',
+): StackSuggestion[] {
+  const partners = SYNERGY[primary.id]
+  if (!partners?.length) return []
+
+  return partners
+    .map((sp) => {
+      const peptide = getPeptideById(sp.id)
+      if (!peptide) return null
+      const doseIdx = recommendedDoseIndex(peptide, level)
+      const dose = peptide.doses[doseIdx] ?? peptide.doses[0]
+      const originalPrice = dose.price
+      const discountedPrice = Math.round(originalPrice * (1 - sp.discountPct / 100) * 100) / 100
+      return {
+        peptide,
+        reason: sp.reason,
+        discountPct: sp.discountPct,
+        originalPrice,
+        discountedPrice,
+      }
+    })
+    .filter((s): s is StackSuggestion => s !== null)
 }

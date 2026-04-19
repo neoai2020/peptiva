@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PEPTIDES, type Peptide, recommendedDoseIndex } from '../data/peptides'
-import { recommendPeptides } from '../lib/recommend'
+import { recommendPeptides, getStackRecommendations, type StackSuggestion } from '../lib/recommend'
 import { benefitHeadline, benefitSubline, durationLabel, energyLabel, getExperienceLevel, goalLabel, pillarDetailSummary, subFocusSummary } from '../lib/quizLabels'
 import { loadQuiz } from '../lib/quizStorage'
 import { defaultQuizAnswers } from '../types/quiz'
@@ -206,6 +206,76 @@ function ShieldIcon() {
   )
 }
 
+function PlusIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  )
+}
+
+function StackSection({ stacks, primarySku }: { stacks: StackSuggestion[]; primarySku: string }) {
+  const [visible, setVisible] = useState(false)
+  const ref = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } },
+      { threshold: 0.1 },
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  if (!stacks.length) return null
+
+  return (
+    <section ref={ref} className={`fp-stack ${visible ? 'fp-stack--in' : ''}`}>
+      <div className="fp-container">
+        <div className="fp-stack-header">
+          <span className="fp-stack-badge">PRACTITIONER PICK</span>
+          <h2 className="fp-section-title">Boost your results — stack with {primarySku}</h2>
+          <p className="fp-section-sub">
+            73% of {primarySku} customers add a stack partner. Practitioners commonly recommend these pairings.
+          </p>
+        </div>
+
+        <div className="fp-stack-grid">
+          {stacks.map((s, i) => (
+            <div
+              key={s.peptide.id}
+              className={`fp-stack-card ${visible ? 'fp-stack-card--in' : ''}`}
+              style={{ transitionDelay: `${i * 120 + 200}ms` }}
+            >
+              <div className="fp-stack-card-img">
+                {s.peptide.image && <img src={s.peptide.image} alt={s.peptide.sku} />}
+              </div>
+              <div className="fp-stack-card-body">
+                <div className="fp-stack-card-top">
+                  <h3 className="fp-stack-card-name">{s.peptide.sku}</h3>
+                  <span className="fp-stack-card-tag">STACK &amp; SAVE</span>
+                </div>
+                <p className="fp-stack-card-reason">{s.reason}</p>
+                <div className="fp-stack-card-pricing">
+                  <span className="fp-stack-card-was">£{s.originalPrice.toFixed(2)}</span>
+                  <span className="fp-stack-card-now">£{s.discountedPrice.toFixed(2)}</span>
+                  <span className="fp-stack-card-save">{s.discountPct}% off when stacked</span>
+                </div>
+                <a href="#plans" className="fp-btn fp-stack-cta">
+                  <PlusIcon /> Add to Stack — £{s.discountedPrice.toFixed(2)}
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <p className="fp-stack-reassure">
+          Not sure? Your practitioner will advise on stacking during your free consultation.
+        </p>
+      </div>
+    </section>
+  )
+}
+
 export default function ResultsPage() {
   const answers = useMemo(() => loadQuiz(), [])
   const valid = answers.goal && answers.researchAck
@@ -229,6 +299,7 @@ export default function ResultsPage() {
   const name = merged.lead?.firstName || 'there'
   const primaryPrice = getPrice(primary, level)
   const copy = getCompoundCopy(primary.id, level)
+  const stacks = useMemo(() => getStackRecommendations(primary, level), [primary, level])
 
   const headline = benefitHeadline(merged)
   const subline = benefitSubline(merged, primary.sku, primaryPrice.now)
@@ -422,6 +493,9 @@ export default function ResultsPage() {
           </div>
         </div>
       </section>
+
+      {/* ── STACKING RECOMMENDATIONS ── */}
+      <StackSection stacks={stacks} primarySku={primary.sku} />
 
       {/* ── SUCCESS STORIES ── */}
       <section className="fp-stories" id="reviews">
