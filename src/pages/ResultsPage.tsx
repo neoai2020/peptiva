@@ -69,11 +69,13 @@ function ProfileCard({
           <div
             key={it.label}
             className={`rp-profile-item ${visible ? 'rp-profile-item--in' : ''}`}
-            style={{ transitionDelay: `${i * 70}ms` }}
+            style={{ transitionDelay: `${i * 90}ms` }}
           >
-            <span className="rp-profile-icon" aria-hidden>{it.icon}</span>
-            <span className="rp-profile-label">{it.label}</span>
-            <span className="rp-profile-value">{it.value}</span>
+            <div className="rp-profile-item-icon" aria-hidden>{it.icon}</div>
+            <div className="rp-profile-item-body">
+              <span className="rp-profile-label">{it.label}</span>
+              <span className="rp-profile-value">{it.value}</span>
+            </div>
           </div>
         ))}
       </div>
