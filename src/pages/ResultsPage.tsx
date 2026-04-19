@@ -614,6 +614,9 @@ export default function ResultsPage() {
             <a href="#plans">Plans</a>
             <a href="#faq">FAQ</a>
           </div>
+          <div className="fp-footer-disclaimer">
+            All products are sold strictly for research purposes only. Not intended for human consumption. By purchasing, you confirm that you understand and accept this.
+          </div>
           <div className="fp-footer-copy">
             © {new Date().getFullYear()} Peptiva Ltd. All rights reserved.
           </div>

@@ -883,6 +883,12 @@ h1, h2, h3 {
   text-align: center;
   border-top: 1px solid var(--border);
 }
+.q-footer-disclaimer {
+  font-size: 0.7rem;
+  opacity: 0.5;
+  margin: 0.5rem 0 0;
+  line-height: 1.4;
+}
 
 .q-trust-line {
   font-size: 0.72rem;
@@ -2130,6 +2136,14 @@ h1, h2, h3 {
   margin: 0 auto 0.75rem;
 }
 
+.tsl-foot-disclaimer {
+  font-size: 0.75rem !important;
+  opacity: 0.55;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  line-height: 1.5;
+}
 .tsl-foot-meta {
   font-size: 0.78rem !important;
 }
@@ -3787,6 +3801,14 @@ h1, h2, h3 {
   text-decoration: none;
 }
 .fp-footer-links a:hover { color: var(--fp-white); }
+.fp-footer-disclaimer {
+  font-size: 0.78rem;
+  opacity: 0.55;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  line-height: 1.5;
+}
 .fp-footer-copy {
   font-size: 0.94rem;
   opacity: 0.5;

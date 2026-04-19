@@ -214,6 +214,7 @@ export default function QuizPage() {
 
         <footer className="q-footer">
           <span className="q-trust-line">🔒 Private &amp; anonymous · 60 seconds · No email required</span>
+          <p className="q-footer-disclaimer">All products are sold strictly for research purposes only. Not intended for human consumption.</p>
         </footer>
       </div>
     </div>

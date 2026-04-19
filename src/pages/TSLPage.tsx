@@ -609,6 +609,9 @@ export default function TSLPage() {
             Peptiva Ltd. Products manufactured in our UK-regulated laboratory.
             99.3%+ verified purity. Third-party lab tested. Practitioner-reviewed protocols.
           </p>
+          <p className="tsl-foot-disclaimer">
+            All products are sold strictly for research purposes only. Not intended for human consumption. By purchasing, you confirm that you understand and accept this.
+          </p>
           <p className="tsl-foot-meta">
             &copy; {new Date().getFullYear()} Peptiva &middot;{' '}
             <Link to="/">Home</Link> &middot;{' '}
