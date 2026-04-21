@@ -666,22 +666,24 @@ function StackCheckCard({
   stack: StackSuggestion; checked: boolean; onToggle: () => void
 }) {
   return (
-    <div className={`fp-scheck ${checked ? 'fp-scheck--active' : ''}`}>
-      <label className="fp-scheck-toggle">
+    <div className={`fp-scheck ${checked ? 'fp-scheck--active' : ''}`} onClick={onToggle}>
+      <label className="fp-scheck-toggle" onClick={(e) => e.stopPropagation()}>
         <input type="checkbox" checked={checked} onChange={onToggle} />
         <span className="fp-scheck-box" />
-        <span className="fp-scheck-add">{checked ? 'Added' : 'Add to stack'}</span>
+        <span className="fp-scheck-add">{checked ? 'Added' : 'Add'}</span>
       </label>
       <div className="fp-scheck-img">
         {stack.peptide.image && <img src={stack.peptide.image} alt={stack.peptide.sku} />}
       </div>
-      <h3 className="fp-scheck-name">{stack.peptide.sku}</h3>
-      <p className="fp-scheck-reason">{stack.reason}</p>
-      <div className="fp-scheck-pricing">
-        <span className="fp-scheck-was">£{stack.originalPrice.toFixed(2)}</span>
-        <span className="fp-scheck-now">£{stack.discountedPrice.toFixed(2)}</span>
+      <div className="fp-scheck-info">
+        <h3 className="fp-scheck-name">{stack.peptide.sku}</h3>
+        <p className="fp-scheck-reason">{stack.reason}</p>
+        <div className="fp-scheck-pricing">
+          <span className="fp-scheck-was">£{stack.originalPrice.toFixed(2)}</span>
+          <span className="fp-scheck-now">£{stack.discountedPrice.toFixed(2)}</span>
+        </div>
+        <span className="fp-scheck-save">{stack.discountPct}% off when stacked</span>
       </div>
-      <span className="fp-scheck-save">{stack.discountPct}% off when stacked</span>
     </div>
   )
 }
