@@ -438,6 +438,7 @@ export default function ResultsPage() {
                 stack={stacks[0]}
                 checked={checkedStacks.has(stacks[0].peptide.id)}
                 onToggle={() => toggleStack(stacks[0].peptide.id)}
+                level={level}
               />
             )}
             <PlanCard peptide={primary} rank={1} isBeginner={isBeginner} level={level} stackTotal={stackTotal} />
@@ -446,6 +447,7 @@ export default function ResultsPage() {
                 stack={stacks[1]}
                 checked={checkedStacks.has(stacks[1].peptide.id)}
                 onToggle={() => toggleStack(stacks[1].peptide.id)}
+                level={level}
               />
             )}
           </div>
@@ -661,28 +663,42 @@ export default function ResultsPage() {
 }
 
 function StackCheckCard({
-  stack, checked, onToggle,
+  stack, checked, onToggle, level,
 }: {
-  stack: StackSuggestion; checked: boolean; onToggle: () => void
+  stack: StackSuggestion; checked: boolean; onToggle: () => void; level: 'beginner' | 'intermediate' | 'advanced'
 }) {
+  const copy = getCompoundCopy(stack.peptide.id, level)
   return (
-    <div className={`fp-scheck ${checked ? 'fp-scheck--active' : ''}`} onClick={onToggle}>
-      <label className="fp-scheck-toggle" onClick={(e) => e.stopPropagation()}>
+    <div className={`fp-scheck ${checked ? 'fp-scheck--active' : ''}`}>
+      <label className="fp-scheck-toggle">
         <input type="checkbox" checked={checked} onChange={onToggle} />
         <span className="fp-scheck-box" />
-        <span className="fp-scheck-add">{checked ? 'Added' : 'Add'}</span>
+        <span className="fp-scheck-label">{checked ? 'Added to stack' : 'Add to stack'}</span>
       </label>
+      <div className="fp-scheck-ribbon">STACK PARTNER</div>
       <div className="fp-scheck-img">
         {stack.peptide.image && <img src={stack.peptide.image} alt={stack.peptide.sku} />}
       </div>
-      <div className="fp-scheck-info">
+      <div className="fp-scheck-body">
         <h3 className="fp-scheck-name">{stack.peptide.sku}</h3>
-        <p className="fp-scheck-reason">{stack.reason}</p>
+        <p className="fp-scheck-tagline">{stack.peptide.tagline}</p>
         <div className="fp-scheck-pricing">
-          <span className="fp-scheck-was">£{stack.originalPrice.toFixed(2)}</span>
           <span className="fp-scheck-now">£{stack.discountedPrice.toFixed(2)}</span>
+          <span className="fp-scheck-was">£{stack.originalPrice.toFixed(2)}</span>
+          <span className="fp-scheck-save">{stack.discountPct}% off</span>
         </div>
-        <span className="fp-scheck-save">{stack.discountPct}% off when stacked</span>
+        <p className="fp-scheck-why">
+          <strong>Why stack this:</strong> {stack.reason}
+        </p>
+        <p className="fp-scheck-expect">{copy.expect.split('.').slice(0, 2).join('.') + '.'}</p>
+        <div className="fp-scheck-features">
+          <div><CheckIcon /> {copy.idealFor[0]}</div>
+          <div><CheckIcon /> {copy.idealFor[1] || 'Practitioner recommended'}</div>
+          <div><CheckIcon /> Free UK shipping</div>
+        </div>
+        <button type="button" className={`fp-btn fp-scheck-cta ${checked ? '' : 'fp-scheck-cta--outline'}`} onClick={onToggle}>
+          {checked ? `✓ Added — £${stack.discountedPrice.toFixed(2)}` : `+ Add to Stack — £${stack.discountedPrice.toFixed(2)}`}
+        </button>
       </div>
     </div>
   )
