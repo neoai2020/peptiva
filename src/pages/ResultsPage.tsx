@@ -206,76 +206,6 @@ function ShieldIcon() {
   )
 }
 
-function PlusIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-  )
-}
-
-function StackSection({ stacks, primarySku }: { stacks: StackSuggestion[]; primarySku: string }) {
-  const [visible, setVisible] = useState(false)
-  const ref = useRef<HTMLDivElement | null>(null)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } },
-      { threshold: 0.1 },
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [])
-
-  if (!stacks.length) return null
-
-  return (
-    <section ref={ref} className={`fp-stack ${visible ? 'fp-stack--in' : ''}`}>
-      <div className="fp-container">
-        <div className="fp-stack-header">
-          <span className="fp-stack-badge">PRACTITIONER PICK</span>
-          <h2 className="fp-section-title">Boost your results — stack with {primarySku}</h2>
-          <p className="fp-section-sub">
-            73% of {primarySku} customers add a stack partner. Practitioners commonly recommend these pairings.
-          </p>
-        </div>
-
-        <div className="fp-stack-grid">
-          {stacks.map((s, i) => (
-            <div
-              key={s.peptide.id}
-              className={`fp-stack-card ${visible ? 'fp-stack-card--in' : ''}`}
-              style={{ transitionDelay: `${i * 120 + 200}ms` }}
-            >
-              <div className="fp-stack-card-img">
-                {s.peptide.image && <img src={s.peptide.image} alt={s.peptide.sku} />}
-              </div>
-              <div className="fp-stack-card-body">
-                <div className="fp-stack-card-top">
-                  <h3 className="fp-stack-card-name">{s.peptide.sku}</h3>
-                  <span className="fp-stack-card-tag">STACK &amp; SAVE</span>
-                </div>
-                <p className="fp-stack-card-reason">{s.reason}</p>
-                <div className="fp-stack-card-pricing">
-                  <span className="fp-stack-card-was">£{s.originalPrice.toFixed(2)}</span>
-                  <span className="fp-stack-card-now">£{s.discountedPrice.toFixed(2)}</span>
-                  <span className="fp-stack-card-save">{s.discountPct}% off when stacked</span>
-                </div>
-                <a href="#plans" className="fp-btn fp-stack-cta">
-                  <PlusIcon /> Add to Stack — £{s.discountedPrice.toFixed(2)}
-                </a>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <p className="fp-stack-reassure">
-          Not sure? Your practitioner will advise on stacking during your free consultation.
-        </p>
-      </div>
-    </section>
-  )
-}
-
 export default function ResultsPage() {
   const answers = useMemo(() => loadQuiz(), [])
   const valid = answers.goal && answers.researchAck
@@ -300,6 +230,20 @@ export default function ResultsPage() {
   const primaryPrice = getPrice(primary, level)
   const copy = getCompoundCopy(primary.id, level)
   const stacks = useMemo(() => getStackRecommendations(primary, level), [primary, level])
+  const [checkedStacks, setCheckedStacks] = useState<Set<string>>(() =>
+    new Set(stacks.map((s) => s.peptide.id)),
+  )
+  const toggleStack = (id: string) => {
+    setCheckedStacks((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+  const stackTotal = stacks
+    .filter((s) => checkedStacks.has(s.peptide.id))
+    .reduce((sum, s) => sum + s.discountedPrice, 0)
 
   const headline = benefitHeadline(merged)
   const subline = benefitSubline(merged, primary.sku, primaryPrice.now)
@@ -478,7 +422,7 @@ export default function ResultsPage() {
         </div>
       </section>
 
-      {/* ── YOUR PLAN ── */}
+      {/* ── YOUR PLAN + STACKS ── */}
       <section className="fp-plans" id="plans">
         <div className="fp-container">
           <h2 className="fp-section-title">
@@ -488,14 +432,30 @@ export default function ResultsPage() {
             One price. No memberships. No hidden fees. Practitioner support included free.
           </p>
 
-          <div className="fp-plans-grid fp-plans-grid--single">
-            <PlanCard peptide={primary} rank={1} isBeginner={isBeginner} level={level} />
+          <div className={`fp-plans-row ${stacks.length > 0 ? 'fp-plans-row--stacked' : ''}`}>
+            {stacks[0] && (
+              <StackCheckCard
+                stack={stacks[0]}
+                checked={checkedStacks.has(stacks[0].peptide.id)}
+                onToggle={() => toggleStack(stacks[0].peptide.id)}
+              />
+            )}
+            <PlanCard peptide={primary} rank={1} isBeginner={isBeginner} level={level} stackTotal={stackTotal} />
+            {stacks[1] && (
+              <StackCheckCard
+                stack={stacks[1]}
+                checked={checkedStacks.has(stacks[1].peptide.id)}
+                onToggle={() => toggleStack(stacks[1].peptide.id)}
+              />
+            )}
           </div>
+          {stacks.length > 0 && (
+            <p className="fp-plans-stack-note">
+              Stacks are pre-selected based on practitioner recommendations. Uncheck to remove.
+            </p>
+          )}
         </div>
       </section>
-
-      {/* ── STACKING RECOMMENDATIONS ── */}
-      <StackSection stacks={stacks} primarySku={primary.sku} />
 
       {/* ── SUCCESS STORIES ── */}
       <section className="fp-stories" id="reviews">
@@ -700,10 +660,37 @@ export default function ResultsPage() {
   )
 }
 
-function PlanCard({ peptide, rank, isBeginner, level }: { peptide: Peptide; rank: number; isBeginner: boolean; level: 'beginner' | 'intermediate' | 'advanced' }) {
+function StackCheckCard({
+  stack, checked, onToggle,
+}: {
+  stack: StackSuggestion; checked: boolean; onToggle: () => void
+}) {
+  return (
+    <div className={`fp-scheck ${checked ? 'fp-scheck--active' : ''}`}>
+      <label className="fp-scheck-toggle">
+        <input type="checkbox" checked={checked} onChange={onToggle} />
+        <span className="fp-scheck-box" />
+        <span className="fp-scheck-add">{checked ? 'Added' : 'Add to stack'}</span>
+      </label>
+      <div className="fp-scheck-img">
+        {stack.peptide.image && <img src={stack.peptide.image} alt={stack.peptide.sku} />}
+      </div>
+      <h3 className="fp-scheck-name">{stack.peptide.sku}</h3>
+      <p className="fp-scheck-reason">{stack.reason}</p>
+      <div className="fp-scheck-pricing">
+        <span className="fp-scheck-was">£{stack.originalPrice.toFixed(2)}</span>
+        <span className="fp-scheck-now">£{stack.discountedPrice.toFixed(2)}</span>
+      </div>
+      <span className="fp-scheck-save">{stack.discountPct}% off when stacked</span>
+    </div>
+  )
+}
+
+function PlanCard({ peptide, rank, isBeginner, level, stackTotal }: { peptide: Peptide; rank: number; isBeginner: boolean; level: 'beginner' | 'intermediate' | 'advanced'; stackTotal: number }) {
   const recIdx = recommendedDoseIndex(peptide, level)
   const [selectedDose, setSelectedDose] = useState(recIdx)
   const dose = peptide.doses[selectedDose] || peptide.doses[0]
+  const total = Math.round((dose.price + stackTotal) * 100) / 100
 
   return (
     <div className={`fp-plan ${rank === 1 ? 'fp-plan--primary' : ''}`}>
@@ -745,8 +732,16 @@ function PlanCard({ peptide, rank, isBeginner, level }: { peptide: Peptide; rank
           <div><CheckIcon /> 30-day quality guarantee</div>
         </div>
         <a href="#plans" className="fp-btn fp-plan-cta">
-          Get {peptide.sku} Now — £{dose.price}
+          {stackTotal > 0
+            ? `Get Full Stack — £${total.toFixed(2)}`
+            : `Get ${peptide.sku} Now — £${dose.price}`
+          }
         </a>
+        {stackTotal > 0 && (
+          <p className="fp-plan-stack-breakdown">
+            {peptide.sku} £{dose.price} + stack savings applied
+          </p>
+        )}
         <div className="fp-plan-guarantee">
           <ShieldIcon />
           <span>99.3%+ purity guaranteed · UK-regulated · Third-party lab tested</span>

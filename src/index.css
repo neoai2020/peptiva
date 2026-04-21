@@ -3361,166 +3361,171 @@ h1, h2, h3 {
   height: 16px;
 }
 
-/* ── Stack Recommendations ── */
-.fp-stack {
-  padding: 4rem 0;
-  background: var(--fp-cream);
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
-.fp-stack--in { opacity: 1; transform: translateY(0); }
-
-.fp-stack-header { text-align: center; margin-bottom: 2.5rem; }
-
-.fp-stack-badge {
-  display: inline-block;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--fp-green);
-  background: rgba(34,197,94,0.08);
-  border: 1px solid rgba(34,197,94,0.2);
-  border-radius: 100px;
-  padding: 0.3rem 0.9rem;
-  margin-bottom: 1rem;
-}
-
-.fp-stack-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.25rem;
-  max-width: 760px;
-  margin: 0 auto;
-}
-
-.fp-stack-card {
+/* ── Plans row with inline stacks ── */
+.fp-plans-row {
   display: flex;
   flex-direction: column;
-  background: var(--fp-white);
-  border: 1px solid var(--fp-border);
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-  opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 0.45s ease, transform 0.45s ease, box-shadow 0.2s ease;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 2rem;
 }
-.fp-stack-card--in { opacity: 1; transform: translateY(0); }
-.fp-stack-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.08); }
-
-.fp-stack-card-img {
+.fp-plans-row .fp-plan {
+  max-width: 480px;
   width: 100%;
-  height: 180px;
-  background: #f8f9fa;
+}
+@media (min-width: 1000px) {
+  .fp-plans-row--stacked {
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: center;
+  }
+  .fp-plans-row--stacked .fp-plan {
+    max-width: 420px;
+    flex: 1 1 420px;
+  }
+  .fp-plans-row--stacked .fp-scheck {
+    flex: 0 1 280px;
+    max-width: 280px;
+  }
+}
+.fp-plans-stack-note {
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--fp-text-muted);
+  margin: 1.25rem 0 0;
+  font-style: italic;
+}
+.fp-plan-stack-breakdown {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--fp-text-muted);
+  margin: 0.35rem 0 0;
+}
+
+/* ── Stack check card ── */
+.fp-scheck {
+  background: var(--fp-white);
+  border: 2px solid var(--fp-border);
+  border-radius: 14px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.6rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  opacity: 0.65;
+}
+.fp-scheck--active {
+  border-color: var(--fp-green);
+  box-shadow: 0 0 0 3px rgba(34,197,94,0.12);
+  opacity: 1;
+}
+
+.fp-scheck-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  align-self: flex-start;
+  margin-bottom: 0.25rem;
+}
+.fp-scheck-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.fp-scheck-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  border: 2px solid #d1d5db;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  flex-shrink: 0;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
-.fp-stack-card-img img {
+.fp-scheck-box::after {
+  content: '';
+  display: block;
+  width: 10px;
+  height: 6px;
+  border-left: 2.5px solid #fff;
+  border-bottom: 2.5px solid #fff;
+  transform: rotate(-45deg) translateY(-1px);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.fp-scheck--active .fp-scheck-box {
+  background: var(--fp-green);
+  border-color: var(--fp-green);
+}
+.fp-scheck--active .fp-scheck-box::after { opacity: 1; }
+.fp-scheck-add {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fp-text-muted);
+}
+.fp-scheck--active .fp-scheck-add { color: var(--fp-green); }
+
+.fp-scheck-img {
+  width: 100%;
+  max-width: 160px;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f8f9fa;
+}
+.fp-scheck-img img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.fp-stack-card-body {
-  padding: 1.25rem 1.5rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  flex: 1;
-}
-
-.fp-stack-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-.fp-stack-card-name {
-  font-size: 1.25rem;
+.fp-scheck-name {
+  font-size: 1.1rem;
   font-weight: 800;
   color: var(--fp-olive);
-  margin: 0;
-}
-.fp-stack-card-tag {
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--fp-green);
-  background: rgba(34,197,94,0.08);
-  border-radius: 4px;
-  padding: 0.2rem 0.5rem;
-  white-space: nowrap;
+  margin: 0.15rem 0 0;
 }
 
-.fp-stack-card-reason {
-  font-size: 0.95rem;
-  line-height: 1.55;
+.fp-scheck-reason {
+  font-size: 0.8rem;
+  line-height: 1.45;
   color: var(--fp-text-soft);
   margin: 0;
 }
 
-.fp-stack-card-pricing {
+.fp-scheck-pricing {
   display: flex;
   align-items: baseline;
-  gap: 0.6rem;
-  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: auto;
 }
-.fp-stack-card-was {
-  font-size: 0.95rem;
+.fp-scheck-was {
+  font-size: 0.85rem;
   color: var(--fp-text-muted);
   text-decoration: line-through;
 }
-.fp-stack-card-now {
-  font-size: 1.35rem;
+.fp-scheck-now {
+  font-size: 1.2rem;
   font-weight: 800;
   color: var(--fp-olive);
 }
-.fp-stack-card-save {
-  font-size: 0.75rem;
+
+.fp-scheck-save {
+  font-size: 0.68rem;
   font-weight: 600;
   color: var(--fp-green);
   background: rgba(34,197,94,0.08);
   border-radius: 4px;
   padding: 0.15rem 0.5rem;
-}
-
-.fp-stack-cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  margin-top: 0.25rem;
-  font-size: 0.95rem;
-}
-.fp-stack-cta svg {
-  width: 15px;
-  height: 15px;
-  flex-shrink: 0;
-}
-
-.fp-stack-reassure {
-  text-align: center;
-  font-size: 0.9rem;
-  color: var(--fp-text-muted);
-  margin: 2rem 0 0;
-  font-style: italic;
-}
-
-@media (min-width: 600px) {
-  .fp-stack-card {
-    flex-direction: row;
-  }
-  .fp-stack-card-img {
-    width: 200px;
-    min-width: 200px;
-    height: auto;
-    min-height: 200px;
-  }
 }
 
 /* ── Why section ── */
