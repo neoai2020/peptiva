@@ -3388,13 +3388,13 @@ h1, h2, h3 {
     gap: 1.25rem;
   }
   .fp-plans-row--stacked .fp-plan {
-    max-width: 440px;
-    flex: 1 1 440px;
+    flex: 1 1 0;
+    max-width: 380px;
     order: 1;
   }
   .fp-plans-row--stacked .fp-scheck {
-    flex: 1 1 320px;
-    max-width: 320px;
+    flex: 1 1 0;
+    max-width: 380px;
   }
   .fp-plans-row--stacked .fp-scheck:first-child { order: 0; }
   .fp-plans-row--stacked .fp-scheck:last-child { order: 2; }

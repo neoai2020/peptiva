@@ -628,12 +628,12 @@ export default function ResultsPage() {
       <div className="fp-sticky">
         <div className="fp-container fp-sticky-inner">
           <div className="fp-sticky-left">
-            <strong>{primary.sku}</strong>
+            <strong>{stackTotal > 0 ? `${primary.sku} + Stack` : primary.sku}</strong>
             <span className="fp-sticky-pricing">
-              <span className="fp-sticky-now">From £{primaryPrice.now}</span>
+              <span className="fp-sticky-now">£{(Math.round((primaryPrice.now + stackTotal) * 100) / 100).toFixed(2)}</span>
             </span>
           </div>
-          <a href="#plans" className="fp-btn fp-btn--sm">Claim My Match</a>
+          <a href="#plans" className="fp-btn fp-btn--sm">{stackTotal > 0 ? 'Get Full Stack' : 'Claim My Match'}</a>
         </div>
       </div>
 
