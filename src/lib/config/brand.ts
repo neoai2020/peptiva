@@ -16,7 +16,7 @@ function isBrand(value: string): value is Brand {
 export function getBrand(): Brand {
   const fromEnv = import.meta.env.VITE_BRAND
   if (typeof fromEnv === 'string' && isBrand(fromEnv)) return fromEnv
-  return 'vitalabs'
+  return 'peptiva'
 }
 
 export const BRAND_LABELS: Record<Brand, string> = {
