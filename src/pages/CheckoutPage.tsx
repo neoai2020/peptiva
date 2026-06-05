@@ -336,17 +336,21 @@ export default function CheckoutPage() {
 
     // Step 2: Create a NEW payment intent with the customerId linked
     const skus = state.items.map(i => i.sku).join(', ')
+    const discountedAmount = Math.max(0, state.amount - Math.round((promo?.discount ?? 0) * 100))
     let freshHyper: ReturnType<typeof getHyperInstance>
     let freshWidgets: ReturnType<ReturnType<typeof getHyperInstance>['widgets']>
 
     try {
       const { clientSecret } = await createPaymentIntent({
-        amount: state.amount,
+        amount: discountedAmount,
         currency: 'GBP',
         description: state.description,
         email: customerEmail.trim(),
         customerId: customerIdRef.current || undefined,
+        redemptionToken: promo?.token,
+        subtotal: state.amount,
         metadata: {
+          brand: getBrand(),
           skus,
           quantity: String(state.quantity),
           shipping_name: customerName.trim(),
