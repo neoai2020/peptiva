@@ -285,7 +285,8 @@ export default function CheckoutPage() {
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!hyperRef.current || !widgetsRef.current || status === 'submitting') return
+    if (status === 'submitting') return
+    if (!state) return
 
     if (!customerFirstName.trim() || !customerLastName.trim() || !customerEmail.trim() || !customerPhone.trim()) {
       setErrorMsg('Please fill in your name, email, and phone number.')
@@ -306,6 +307,7 @@ export default function CheckoutPage() {
     setStatus('submitting')
     setErrorMsg(null)
 
+    // Step 1: Create the customer so we get a customerId
     if (!customerIdRef.current) {
       try {
         const firstName = customerFirstName.trim()
@@ -332,6 +334,57 @@ export default function CheckoutPage() {
       }
     }
 
+    // Step 2: Create a NEW payment intent with the customerId linked
+    const skus = state.items.map(i => i.sku).join(', ')
+    let freshHyper: ReturnType<typeof getHyperInstance>
+    let freshWidgets: ReturnType<ReturnType<typeof getHyperInstance>['widgets']>
+
+    try {
+      const { clientSecret } = await createPaymentIntent({
+        amount: state.amount,
+        currency: 'GBP',
+        description: state.description,
+        email: customerEmail.trim(),
+        customerId: customerIdRef.current || undefined,
+        metadata: {
+          skus,
+          quantity: String(state.quantity),
+          shipping_name: customerName.trim(),
+          shipping_address1: shippingAddress1.trim(),
+          shipping_address2: shippingAddress2.trim(),
+          shipping_city: shippingCity.trim(),
+          shipping_county: shippingCounty.trim(),
+          shipping_postcode: shippingPostcode.trim(),
+          shipping_country: shippingCountry,
+        },
+      })
+
+      // Step 3: Re-init SDK with the new clientSecret that has customer linked
+      freshHyper = getHyperInstance()
+      hyperRef.current = freshHyper
+
+      freshWidgets = freshHyper.widgets({
+        clientSecret,
+        appearance: UPRAILS_APPEARANCE,
+      })
+      widgetsRef.current = freshWidgets
+
+      const paymentElement = freshWidgets.create('payment')
+      const container = paymentContainerRef.current
+      if (container) {
+        container.innerHTML = ''
+        const mount = document.createElement('div')
+        mount.id = 'payment-element'
+        container.appendChild(mount)
+        paymentElement.mount('#payment-element')
+      }
+    } catch (err) {
+      console.error('Failed to create payment intent:', err)
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to initialize payment. Please try again.')
+      setStatus('ready')
+      return
+    }
+
     const returnPath = state?.returnPath || '/order-complete'
 
     sessionStorage.setItem('vitalabs-last-order', JSON.stringify({
@@ -353,14 +406,15 @@ export default function CheckoutPage() {
       },
     }))
 
+    // Step 4: Confirm payment with the fresh widgets
     const timeoutId = setTimeout(() => {
       setErrorMsg('Payment is taking longer than expected. Please check your email for confirmation or try again.')
       setStatus('ready')
     }, 60_000)
 
     try {
-      const result = await hyperRef.current.confirmPayment({
-        elements: widgetsRef.current,
+      const result = await freshHyper.confirmPayment({
+        elements: freshWidgets,
         confirmParams: {
           return_url: `${window.location.origin}${returnPath}`,
         },
