@@ -28,6 +28,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { handleOptions, jsonResponse } from '../_shared/cors.ts'
+import { resolveAssetUrl } from '../_shared/assetUrl.ts'
 import { generateAdCopy } from '../_shared/adCopy.ts'
 import {
   buildAdPrompt,
@@ -130,12 +131,14 @@ serve(async (req: Request) => {
     return jsonResponse({ ok: false, error: 'product not found' }, 404)
   }
 
+  const productImageUrl = resolveAssetUrl(product.image_url, req)
+
   const productCtx: ProductContext = {
     compound: product.compound,
     tagline: product.tagline,
     description: product.description,
     benefits: product.benefits,
-    image_url: product.image_url,
+    image_url: productImageUrl,
   }
 
   const built = buildAdPrompt(body.ad_type, body.config ?? {}, productCtx, body.brand)
@@ -148,9 +151,9 @@ serve(async (req: Request) => {
   // proceed without it — Gemini will still produce something usable from
   // the prompt alone, just less on-brand.
   let referenceImage: { mime: string; base64: string } | null = null
-  if (product.image_url) {
+  if (productImageUrl) {
     try {
-      const imgRes = await fetch(product.image_url)
+      const imgRes = await fetch(productImageUrl)
       if (imgRes.ok) {
         const mime = imgRes.headers.get('content-type') ?? 'image/jpeg'
         const buf = new Uint8Array(await imgRes.arrayBuffer())

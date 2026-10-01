@@ -26,6 +26,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { handleOptions, jsonResponse } from '../_shared/cors.ts'
+import { resolveAssetUrl } from '../_shared/assetUrl.ts'
 import {
   buildAdPrompt,
   getAdTypeEntry,
@@ -155,12 +156,14 @@ serve(async (req: Request) => {
     .maybeSingle()
   if (!product) return jsonResponse({ ok: false, error: 'product not found' }, 404)
 
+  const productImageUrl = resolveAssetUrl(product.image_url, req)
+
   const productCtx: ProductContext = {
     compound: product.compound,
     tagline: product.tagline,
     description: product.description,
     benefits: product.benefits,
-    image_url: product.image_url,
+    image_url: productImageUrl,
   }
 
   const built = buildAdPrompt(body.ad_type, body.config ?? {}, productCtx, body.brand)
@@ -177,7 +180,7 @@ serve(async (req: Request) => {
   const submission = {
     params: modelConfig.buildInput({
       prompt: built.prompt,
-      image_url: product.image_url,
+      image_url: productImageUrl,
       duration_s: duration,
       aspect_ratio: aspect,
     }),
