@@ -8,6 +8,10 @@
 		header X-Relay-Token {$RELAY_TOKEN}
 	}
 
+	handle /healthz {
+		respond "ok" 200
+	}
+
 	handle @allowed {
 		request_header -X-Relay-Token
 		reverse_proxy https://app.kingsgatemerchants.com {
