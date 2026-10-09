@@ -133,12 +133,10 @@ The admin's brand switcher hard-codes the two current brands in
 
 ## What's intentionally manual
 
-- **Stripe / Uprails refunds**. The orders dashboard sets `status='refunded'`
-  but does not call the payment provider — issue the refund in Stripe/Uprails
-  manually after updating status.
-- **Promo code redemption count**. The `uses` column is not incremented
-  client-side. A server-side webhook (Edge Function) should bump it after
-  successful payment; this is not yet wired up.
+- **Refunds**. The orders dashboard sets `status='refunded'` but does not
+  call the payment provider. ShadowPay's SDK can't issue refunds yet, so
+  arrange them with KingsGate (older orders: Stripe/Uprails) after updating
+  the status.
 - **Members list**. `auth.users` isn't directly queryable from the browser
   with public RLS; the `Members` page points at the Supabase dashboard until
   an Edge Function is added.
