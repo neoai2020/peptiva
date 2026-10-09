@@ -60,3 +60,26 @@ export async function getShadowPay(): Promise<ShadowPay> {
   cached = new ShadowPay(secret_key ?? '', options)
   return cached
 }
+
+type CreateParams = Parameters<ShadowPay['checkouts']['create']>[0]
+
+const EMBEDDED_RETRY_MS = 10 * 60_000
+let embeddedUnavailableAt = 0
+
+/**
+ * Opens an embedded checkout (card form on our page) when KingsGate has it
+ * enabled for the store, otherwise its payment page. The "not enabled"
+ * answer is remembered for a few minutes so most checkouts make one call.
+ */
+export async function createPreferredCheckout(params: Omit<CreateParams, 'checkoutType'>) {
+  const shadowpay = await getShadowPay()
+  if (Date.now() - embeddedUnavailableAt > EMBEDDED_RETRY_MS) {
+    try {
+      return await shadowpay.checkouts.create({ ...params, checkoutType: 'embedded' })
+    } catch (err) {
+      if (!(err instanceof ShadowPayError && err.code === 'checkout_type_not_enabled')) throw err
+      embeddedUnavailableAt = Date.now()
+    }
+  }
+  return await shadowpay.checkouts.create({ ...params, checkoutType: 'external' })
+}
