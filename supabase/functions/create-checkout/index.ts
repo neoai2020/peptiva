@@ -20,7 +20,7 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { handleOptions, jsonResponse } from '../_shared/cors.ts'
 import { verifyRedemptionToken } from '../_shared/redemption-token.ts'
-import { getShadowPay, ShadowPayError } from '../_shared/shadowpay.ts'
+import { createPreferredCheckout, ShadowPayError } from '../_shared/shadowpay.ts'
 
 type Brand = 'vitalabs' | 'peptiva'
 
@@ -178,11 +178,10 @@ serve(async (req: Request) => {
 
     let checkout
     try {
-      checkout = await (await getShadowPay()).checkouts.create({
+      checkout = await createPreferredCheckout({
         orderId,
         amount: chargedAmount.toFixed(2),
         currency,
-        checkoutType: 'external',
         returnUrl,
         customer: { email, name: customerName ?? undefined, phone: body.customer?.phone || undefined },
         shipping: {
