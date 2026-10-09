@@ -2,13 +2,13 @@
  * Validates a promo code server-side against the requested brand and
  * subtotal, then returns a short-lived HMAC-signed redemption token.
  *
- * The token is passed through `create-payment` (which re-verifies the
- * HMAC) and finally landed in `uprails-webhook` (which increments the
+ * The token is passed through `create-checkout` (which re-verifies the
+ * HMAC) and finally landed in `shadowpay-webhook` (which increments the
  * promo's `uses` counter after payment succeeds). This means:
  *
  * 1. Bogus codes / expired codes / over-cap codes are rejected here.
  * 2. The discount the client displays is the discount the server signed.
- * 3. A user can't mutate the discount in devtools — `create-payment`
+ * 3. A user can't mutate the discount in devtools — `create-checkout`
  *    re-derives the final amount from the signed payload.
  * 4. `uses` only increments after a real payment confirms, not on
  *    every validation attempt.
@@ -79,7 +79,7 @@ serve(async (req: Request) => {
       discount_pence = Math.min(body.subtotal_pence, Math.round(Number(row.value) * 100))
     } else if (row.type === 'free_shipping') {
       // Shipping handled separately at checkout — return 0 here but still
-      // issue a token so create-payment / webhook know shipping is free.
+      // issue a token so create-checkout / webhook know shipping is free.
       discount_pence = 0
     }
 
