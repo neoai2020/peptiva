@@ -1,0 +1,58 @@
+{
+  "egress": {
+    "type": "DEDICATED_IP"
+  },
+  "services": [
+    {
+      "name": "shadowpay-relay",
+      "image": {
+        "registry_type": "DOCKER_HUB",
+        "registry": "library",
+        "repository": "caddy",
+        "tag": "2.8-alpine"
+      },
+      "run_command": "sh -c 'printf \"%s\" \"$CADDYFILE\" > /etc/caddy/Caddyfile && exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile'",
+      "instance_size_slug": "apps-s-1vcpu-0.5gb",
+      "instance_count": 1,
+      "http_port": 8080,
+      "health_check": {
+        "http_path": "/healthz"
+      },
+      "envs": [
+        {
+          "key": "RELAY_DOMAIN",
+          "value": ":8080",
+          "scope": "RUN_TIME"
+        },
+        {
+          "key": "RELAY_TOKEN",
+          "value": "<same value as shadowpay_relay_token in Supabase Vault>",
+          "scope": "RUN_TIME",
+          "type": "SECRET"
+        },
+        {
+          "key": "CADDYFILE",
+          "value": "<contents of scripts/shadowpay-relay/Caddyfile>",
+          "scope": "RUN_TIME"
+        }
+      ]
+    }
+  ],
+  "ingress": {
+    "rules": [
+      {
+        "match": {
+          "path": {
+            "prefix": "/shadowpay-relay"
+          },
+          "authority": {
+            "exact": ""
+          }
+        },
+        "component": {
+          "name": "shadowpay-relay"
+        }
+      }
+    ]
+  }
+}

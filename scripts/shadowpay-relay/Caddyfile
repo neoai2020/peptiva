@@ -1,6 +1,11 @@
 # Forwards ShadowPay SDK calls from Supabase to KingsGate so they leave from
 # this server's fixed IP, the one allow-listed on the live API key.
 # Only /api/v1/sdk/* with the right X-Relay-Token is forwarded.
+#
+# Live: the `shadowpay-relay` service of the peptiva App Platform app
+# (app-platform.json), served at https://peptivalabs.io/shadowpay-relay from
+# the app's dedicated egress IPs. Its CADDYFILE env var is a copy of this
+# file; update it there after editing. setup.sh is the Droplet alternative.
 
 {$RELAY_DOMAIN} {
 	@allowed {
