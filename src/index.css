@@ -7486,9 +7486,9 @@ h1, h2, h3 {
   gap: 1rem;
 }
 
-/* Credit-card visual shell — the actual card inputs are rendered by
-   the Uprails iframe inside `.ck-payment-element`. This is just chrome
-   to match the mockup. */
+/* Credit-card visual shell. Card details are entered on the ShadowPay
+   payment page (or its iframe inside `.ck-payment-element` for embedded
+   checkouts). This is just chrome to match the mockup. */
 .ck-pay-group {
   border: 1px solid var(--ck-line);
   border-radius: 8px;

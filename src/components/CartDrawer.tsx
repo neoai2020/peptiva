@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../lib/cart'
-import type { CheckoutState } from '../lib/uprails'
+import type { CheckoutState } from '../lib/checkout'
 
 export default function CartDrawer() {
   const { items, totalItems, totalPrice, removeItem, updateQuantity, clearCart, isOpen, closeCart } = useCart()

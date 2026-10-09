@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
-import type { CheckoutState } from '../lib/uprails'
+import type { CheckoutState } from '../lib/checkout'
 
 export default function TestPaymentPage() {
   const navigate = useNavigate()

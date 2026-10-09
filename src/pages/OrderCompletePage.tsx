@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { getCheckoutStatus, LAST_ORDER_KEY, type OrderPaymentStatus } from '../lib/checkout'
+import { useCart } from '../lib/cart'
 import { waitForFbq } from '../lib/tracking/pixelLoaders'
 import { trackEvent } from '../lib/analytics'
 
@@ -23,69 +24,144 @@ interface OrderInfo {
   }
 }
 
+function readLastOrder(): OrderInfo | null {
+  try {
+    const stored = sessionStorage.getItem(LAST_ORDER_KEY)
+    return stored ? JSON.parse(stored) as OrderInfo : null
+  } catch {
+    return null
+  }
+}
+
+const POLL_INTERVAL_MS = 3000
+const POLL_MAX_ATTEMPTS = 40
+
 export default function OrderCompletePage() {
-  const [order, setOrder] = useState<OrderInfo | null>(null)
-  const webhookSent = useRef(false)
+  const [order] = useState<OrderInfo | null>(readLastOrder)
+  const [searchParams] = useSearchParams()
+  const checkoutId = searchParams.get('checkout_id')
+  const [paymentStatus, setPaymentStatus] = useState<OrderPaymentStatus | 'checking' | 'unknown'>(
+    checkoutId ? 'checking' : 'unknown',
+  )
+  const { clearCart } = useCart()
 
   useEffect(() => {
     window.scrollTo(0, 0)
+  }, [])
+
+  // The shopper can land here before ShadowPay's webhook marks the order
+  // paid, so poll the server-side status rather than trusting the redirect.
+  useEffect(() => {
+    if (!checkoutId) return
+    let cancelled = false
+    let timer: number | undefined
+    let attempts = 0
+    const poll = async () => {
+      const status = await getCheckoutStatus(checkoutId)
+      if (cancelled) return
+      attempts += 1
+      if (status === 'paid' || status === 'failed') {
+        setPaymentStatus(status)
+      } else if (attempts >= POLL_MAX_ATTEMPTS) {
+        setPaymentStatus('pending')
+      } else {
+        timer = window.setTimeout(poll, POLL_INTERVAL_MS)
+      }
+    }
+    void poll()
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [checkoutId])
+
+  useEffect(() => {
+    if (paymentStatus !== 'paid' || !checkoutId) return
+    // Refreshing this page must not count the purchase twice.
+    const trackedKey = `peptiva-purchase-tracked:${checkoutId}`
+    if (sessionStorage.getItem(trackedKey)) return
+    sessionStorage.setItem(trackedKey, '1')
+    clearCart()
+
     let cancelled = false
     void (async () => {
-      try {
-        const stored = sessionStorage.getItem('peptiva-last-order')
-        if (!stored) return
-        const parsed = JSON.parse(stored) as OrderInfo
+      const parsed = readLastOrder()
+
+      // First-party analytics: completed checkout. Powers conversion
+      // rate + abandonment charts on the admin dashboard.
+      trackEvent('checkout_completed', {
+        props: {
+          amount_pence: parsed?.amount,
+          sku_count: parsed?.items?.length ?? 0,
+        },
+      })
+
+      // Fire the Meta Purchase pixel. ShadowPay redirects here via a hard
+      // navigation, so the page is a cold load — `useTracking()` injects
+      // fbevents.js only after `ConfigProvider`'s async fetch resolves,
+      // which races with this effect. Without the wait, `window.fbq` is
+      // undefined the moment we get here and the event is silently lost.
+      if (parsed?.amount) {
+        const valueInPounds = parsed.amount / 100
+        const ready = await waitForFbq(8000)
         if (cancelled) return
-        setOrder(parsed)
-
-        // First-party analytics: completed checkout. Powers conversion
-        // rate + abandonment charts on the admin dashboard.
-        trackEvent('checkout_completed', {
-          props: {
-            amount_pence: parsed.amount,
-            sku_count: parsed.items?.length ?? 0,
-          },
-        })
-
-        // Fire the Meta Purchase pixel. Uprails redirects here via a hard
-        // navigation, so the page is a cold load — `useTracking()` injects
-        // fbevents.js only after `ConfigProvider`'s async fetch resolves,
-        // which races with this effect. Without the wait, `window.fbq` is
-        // undefined the moment we get here and the event is silently lost.
-        if (parsed.amount) {
-          const valueInPounds = parsed.amount / 100
-          const ready = await waitForFbq(8000)
-          if (cancelled) return
-          if (ready && typeof window.fbq === 'function') {
-            window.fbq('track', 'Purchase', {
-              value: valueInPounds,
-              currency: 'GBP',
-            })
-          } else {
-            console.warn('[OrderComplete] Meta pixel never loaded — Purchase event skipped')
-          }
+        if (ready && typeof window.fbq === 'function') {
+          window.fbq('track', 'Purchase', {
+            value: valueInPounds,
+            currency: 'GBP',
+          })
+        } else {
+          console.warn('[OrderComplete] Meta pixel never loaded — Purchase event skipped')
         }
-
-        if (!webhookSent.current && parsed.customerEmail) {
-          webhookSent.current = true
-          supabase.functions.invoke('order-webhook', {
-            body: {
-              // brand attributes the order on the shared DB so peptiva
-              // sales don't accidentally show under vitalabs.
-              brand: parsed.brand,
-              customerName: parsed.customerName,
-              customerEmail: parsed.customerEmail,
-              customerPhone: parsed.customerPhone,
-              shippingAddress: parsed.shippingAddress,
-              items: parsed.items,
-              amount: parsed.amount,
-            },
-          }).catch(err => console.error('[OrderComplete] order webhook failed:', err))
-        }
-      } catch { /* ignore */ }
+      }
     })()
     return () => { cancelled = true }
-  }, [])
+  }, [paymentStatus, checkoutId, clearCart])
+
+  if (paymentStatus !== 'paid') {
+    return (
+      <div className="oc-page">
+        <header className="oc-header">
+          <Link to="/" className="oc-logo">Peptiva</Link>
+        </header>
+        <main className="oc-main">
+          <div className="oc-card">
+            {paymentStatus === 'checking' && (
+              <>
+                <h1>Confirming your payment…</h1>
+                <p className="oc-subtitle">This usually takes a few seconds. Please don't close this page.</p>
+              </>
+            )}
+            {paymentStatus === 'pending' && (
+              <>
+                <h1>Your payment is processing</h1>
+                <p className="oc-subtitle">
+                  We haven't received confirmation yet. You'll get an email as soon as your
+                  payment is confirmed — there's no need to pay again.
+                </p>
+              </>
+            )}
+            {paymentStatus === 'failed' && (
+              <>
+                <h1>Your payment didn't go through</h1>
+                <p className="oc-subtitle">
+                  You haven't been charged. Your cart is saved, so you can try again with
+                  the same or a different card.
+                </p>
+              </>
+            )}
+            {paymentStatus === 'unknown' && (
+              <>
+                <h1>We couldn't find this payment</h1>
+                <p className="oc-subtitle">If you've just paid, check your email for your order confirmation.</p>
+              </>
+            )}
+            {paymentStatus !== 'checking' && <Link to="/" className="oc-btn">Return to Peptiva</Link>}
+          </div>
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="oc-page">

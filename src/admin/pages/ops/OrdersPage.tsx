@@ -10,6 +10,10 @@ interface OrderRow {
   id: string
   stripe_id: string | null
   uprails_id: string | null
+  shadowpay_checkout_id: string | null
+  charged_amount: number | null
+  charged_currency: string | null
+  metadata: { payment_review?: string } | null
   email: string | null
   customer_name: string | null
   items: Array<{ sku?: string; compound?: string; quantity?: number; price?: number }>
@@ -39,6 +43,9 @@ function downloadCsv(orders: OrderRow[]) {
     status: o.status,
     stripe_id: o.stripe_id,
     uprails_id: o.uprails_id,
+    shadowpay_checkout_id: o.shadowpay_checkout_id,
+    charged: o.charged_amount != null ? `${o.charged_currency} ${Number(o.charged_amount).toFixed(2)}` : '',
+    payment_review: o.metadata?.payment_review ?? '',
     items: o.items.map(i => `${i.sku ?? ''} ${i.compound ?? ''}`.trim()).join(' | '),
   }))
   const csv = Papa.unparse(rows)
@@ -59,7 +66,7 @@ export default function OrdersPage() {
   const { upsert } = useBrandMutation({ table: 'orders' })
 
   const markRefunded = (order: OrderRow) => {
-    if (!confirm(`Mark order ${order.id.slice(0, 8)} as refunded? You still need to issue the refund in Stripe/Uprails manually.`)) return
+    if (!confirm(`Mark order ${order.id.slice(0, 8)} as refunded? You still need to arrange the refund with KingsGate (ShadowPay) — older orders: Stripe/Uprails.`)) return
     void upsert.mutateAsync({ row: { ...order, status: 'refunded' }, onConflict: 'id' })
   }
 
@@ -81,7 +88,7 @@ export default function OrdersPage() {
                 <Th>Items</Th>
                 <Th className="text-right">Total</Th>
                 <Th>Status</Th>
-                <Th>Stripe / Uprails</Th>
+                <Th>Payment ref</Th>
                 <Th className="text-right">—</Th>
               </Tr>
             </THead>
@@ -96,13 +103,22 @@ export default function OrdersPage() {
                   <Td className="max-w-xs truncate">
                     {o.items.map(i => `${i.sku ?? ''} ${i.compound ?? ''}`.trim()).filter(Boolean).join(', ')}
                   </Td>
-                  <Td className="text-right font-medium">{o.currency} {Number(o.total).toFixed(2)}</Td>
+                  <Td className="text-right font-medium">
+                    {o.currency} {Number(o.total).toFixed(2)}
+                    {o.charged_amount != null && o.charged_currency && o.charged_currency !== o.currency ? (
+                      <div className="text-xs font-normal text-[var(--color-admin-muted)]">charged {o.charged_currency} {Number(o.charged_amount).toFixed(2)}</div>
+                    ) : null}
+                  </Td>
                   <Td>
                     <StatusPill tone={STATUS_TONE[o.status]}>{o.status}</StatusPill>
+                    {o.metadata?.payment_review ? (
+                      <div className="mt-1 text-xs text-[var(--color-admin-danger)]">Needs review: {o.metadata.payment_review.replace(/_/g, ' ')}</div>
+                    ) : null}
                   </Td>
                   <Td className="admin-mono text-[11.5px] text-[var(--color-admin-muted)]">
                     {o.stripe_id ? <div>S · {o.stripe_id.slice(0, 12)}…</div> : null}
                     {o.uprails_id ? <div>U · {o.uprails_id.slice(0, 12)}…</div> : null}
+                    {o.shadowpay_checkout_id ? <div>SP · {o.shadowpay_checkout_id.slice(0, 12)}…</div> : null}
                   </Td>
                   <Td className="text-right">
                     {o.status === 'paid' || o.status === 'fulfilled' ? (

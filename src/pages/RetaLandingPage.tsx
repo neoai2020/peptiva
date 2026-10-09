@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PEPTIDES } from '../data/peptides'
 import { BRAND_LABELS, getBrand } from '../lib/config/brand'
-import type { CheckoutState } from '../lib/uprails'
+import type { CheckoutState } from '../lib/checkout'
 
 /**
  * Reta — dedicated long-form sales page. Not linked from anywhere on the

@@ -1,18 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { handleNextAction } from '@shadowpayhq/sdk/js'
 import {
-  createCustomer,
-  createPaymentIntent,
-  getHyperInstance,
-  UPRAILS_APPEARANCE,
+  createCheckout,
+  CheckoutError,
+  LAST_ORDER_KEY,
   type CheckoutState,
-} from '../lib/uprails'
-import { useCart } from '../lib/cart'
+} from '../lib/checkout'
 import { redeemPromoCode } from '../lib/marketing'
 import { trackEvent } from '../lib/analytics'
 import { getBrand, getBrandLogo, BRAND_LABELS } from '../lib/config/brand'
 
-type Status = 'idle' | 'loading' | 'ready' | 'submitting' | 'succeeded' | 'failed'
+type Status = 'ready' | 'submitting'
 
 interface AppliedPromo {
   code: string
@@ -123,7 +122,6 @@ function getRegionLabels(country: string): { state: string; postcode: string; po
 export default function CheckoutPage() {
   const { state } = useLocation() as { state: CheckoutState | null }
   const navigate = useNavigate()
-  const { clearCart } = useCart()
 
   useEffect(() => {
     const prev = document.documentElement.getAttribute('data-theme')
@@ -146,7 +144,7 @@ export default function CheckoutPage() {
     })
   }, [state])
 
-  const [status, setStatus] = useState<Status>('idle')
+  const [status, setStatus] = useState<Status>('ready')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const [customerFirstName, setCustomerFirstName] = useState('')
@@ -172,116 +170,24 @@ export default function CheckoutPage() {
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [bottomSummaryOpen, setBottomSummaryOpen] = useState(false)
 
-  const customerIdRef = useRef<string | null>(null)
-  const hyperRef = useRef<ReturnType<typeof getHyperInstance> | null>(null)
-  const widgetsRef = useRef<ReturnType<ReturnType<typeof getHyperInstance>['widgets']> | null>(null)
+  const orderIdRef = useRef<string | null>(null)
   const paymentContainerRef = useRef<HTMLDivElement | null>(null)
-  const [initCount, setInitCount] = useState(0)
+  const mountedCheckoutRef = useRef<{ unmount(): void } | null>(null)
+  const [embedded, setEmbedded] = useState(false)
 
   const countdown = useCountdown(10)
 
-  /* Capture the latest customer + shipping values in a ref so the
-   * payment-intent metadata can include them at init time WITHOUT
-   * pinning them as useCallback deps. Without this, every keystroke
-   * in a shipping field rebuilt initPayment, retriggered the effect,
-   * created a fresh PaymentIntent, and ripped+remounted the Uprails
-   * iframe — both a UX nightmare (skeleton flash on every key) and a
-   * production cost issue (PaymentIntent per keystroke). */
-  const formMetaRef = useRef({
-    customerName,
-    customerEmail,
-    shippingAddress1,
-    shippingAddress2,
-    shippingCity,
-    shippingCounty,
-    shippingPostcode,
-    shippingCountry,
-  })
+  // Coming back from the payment page with the browser's Back button can
+  // restore this page from the back/forward cache mid-"Redirecting…".
   useEffect(() => {
-    formMetaRef.current = {
-      customerName,
-      customerEmail,
-      shippingAddress1,
-      shippingAddress2,
-      shippingCity,
-      shippingCounty,
-      shippingPostcode,
-      shippingCountry,
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setStatus('ready')
     }
-  })
+    window.addEventListener('pageshow', onPageShow)
+    return () => window.removeEventListener('pageshow', onPageShow)
+  }, [])
 
-  const initPayment = useCallback(async () => {
-    if (!state) return
-
-    try {
-      setStatus('loading')
-      setErrorMsg(null)
-
-      const skus = state.items.map(i => i.sku).join(', ')
-
-      // Discount amount is server-derived from the redemption_token. The
-      // local `promo.discount` is only used for UI display.
-      const discountedAmount = Math.max(0, state.amount - Math.round((promo?.discount ?? 0) * 100))
-
-      const meta = formMetaRef.current
-      const { clientSecret } = await createPaymentIntent({
-        amount: discountedAmount,
-        currency: 'GBP',
-        description: state.description,
-        email: meta.customerEmail || state.email,
-        redemptionToken: promo?.token,
-        subtotal: state.amount,
-        metadata: {
-          // brand goes on the PaymentIntent so the Uprails server-to-server
-          // webhook can attribute the order to the right brand on the
-          // shared database.
-          brand: getBrand(),
-          skus,
-          quantity: String(state.quantity),
-          shipping_name: meta.customerName,
-          shipping_address1: meta.shippingAddress1,
-          shipping_address2: meta.shippingAddress2,
-          shipping_city: meta.shippingCity,
-          shipping_county: meta.shippingCounty,
-          shipping_postcode: meta.shippingPostcode,
-          shipping_country: meta.shippingCountry,
-        },
-      })
-
-      const hyper = getHyperInstance()
-      hyperRef.current = hyper
-
-      const widgets = hyper.widgets({
-        clientSecret,
-        appearance: UPRAILS_APPEARANCE,
-      })
-      widgetsRef.current = widgets
-
-      const paymentElement = widgets.create('payment')
-
-      const container = paymentContainerRef.current
-      if (container) {
-        container.innerHTML = ''
-        const mount = document.createElement('div')
-        mount.id = 'payment-element'
-        container.appendChild(mount)
-        paymentElement.mount('#payment-element')
-      }
-
-      setStatus('ready')
-    } catch (err) {
-      console.error('Checkout init failed:', err)
-      setErrorMsg(err instanceof Error ? err.message : 'Failed to load payment form')
-      setStatus('failed')
-    }
-    // Only re-init on amount-changing inputs. Shipping/customer fields
-    // flow through formMetaRef and the explicit sessionStorage write at
-    // submit time, so they don't need to retrigger init.
-  }, [state, promo?.discount, promo?.token])
-
-  useEffect(() => {
-    initPayment()
-  }, [initPayment, initCount])
+  useEffect(() => () => mountedCheckoutRef.current?.unmount(), [])
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
@@ -307,157 +213,83 @@ export default function CheckoutPage() {
     setStatus('submitting')
     setErrorMsg(null)
 
-    // Step 1: Create the customer so we get a customerId
-    if (!customerIdRef.current) {
-      try {
-        const firstName = customerFirstName.trim()
-        const lastName = customerLastName.trim()
-
-        const { customerId } = await createCustomer({
-          email: customerEmail.trim(),
-          name: customerName,
-          phone: customerPhone.trim(),
-          address: {
-            line1: shippingAddress1.trim(),
-            line2: shippingAddress2.trim() || undefined,
-            city: shippingCity.trim(),
-            state: shippingCounty.trim() || undefined,
-            zip: shippingPostcode.trim(),
-            country: shippingCountry,
-            first_name: firstName,
-            last_name: lastName,
-          },
-        })
-        customerIdRef.current = customerId
-      } catch (err) {
-        console.error('Failed to create customer:', err)
-      }
+    const returnPath = state.returnPath || '/order-complete'
+    const shipping = {
+      address1: shippingAddress1.trim(),
+      address2: shippingAddress2.trim(),
+      city: shippingCity.trim(),
+      county: shippingCounty.trim(),
+      postcode: shippingPostcode.trim(),
+      country: shippingCountry,
     }
 
-    // Step 2: Create a NEW payment intent with the customerId linked
-    const skus = state.items.map(i => i.sku).join(', ')
-    const discountedAmount = Math.max(0, state.amount - Math.round((promo?.discount ?? 0) * 100))
-    let freshHyper: ReturnType<typeof getHyperInstance>
-    let freshWidgets: ReturnType<ReturnType<typeof getHyperInstance>['widgets']>
-
-    try {
-      const { clientSecret } = await createPaymentIntent({
-        amount: discountedAmount,
-        currency: 'GBP',
-        description: state.description,
-        email: customerEmail.trim(),
-        customerId: customerIdRef.current || undefined,
-        redemptionToken: promo?.token,
-        subtotal: state.amount,
-        metadata: {
-          brand: getBrand(),
-          skus,
-          quantity: String(state.quantity),
-          shipping_name: customerName.trim(),
-          shipping_address1: shippingAddress1.trim(),
-          shipping_address2: shippingAddress2.trim(),
-          shipping_city: shippingCity.trim(),
-          shipping_county: shippingCounty.trim(),
-          shipping_postcode: shippingPostcode.trim(),
-          shipping_country: shippingCountry,
-        },
-      })
-
-      // Step 3: Re-init SDK with the new clientSecret that has customer linked
-      freshHyper = getHyperInstance()
-      hyperRef.current = freshHyper
-
-      freshWidgets = freshHyper.widgets({
-        clientSecret,
-        appearance: UPRAILS_APPEARANCE,
-      })
-      widgetsRef.current = freshWidgets
-
-      const paymentElement = freshWidgets.create('payment')
-      const container = paymentContainerRef.current
-      if (container) {
-        container.innerHTML = ''
-        const mount = document.createElement('div')
-        mount.id = 'payment-element'
-        container.appendChild(mount)
-        paymentElement.mount('#payment-element')
-      }
-    } catch (err) {
-      console.error('Failed to create payment intent:', err)
-      setErrorMsg(err instanceof Error ? err.message : 'Failed to initialize payment. Please try again.')
-      setStatus('ready')
-      return
-    }
-
-    const returnPath = state?.returnPath || '/order-complete'
-
-    sessionStorage.setItem('vitalabs-last-order', JSON.stringify({
+    sessionStorage.setItem(LAST_ORDER_KEY, JSON.stringify({
       brand: getBrand(),
-      description: state?.description,
-      displayPrice: state?.displayPrice,
-      amount: state?.amount,
-      items: state?.items,
+      description: state.description,
+      displayPrice: state.displayPrice,
+      amount: state.amount,
+      items: state.items,
       customerName,
       customerEmail,
       customerPhone,
-      shippingAddress: {
-        address1: shippingAddress1,
-        address2: shippingAddress2,
-        city: shippingCity,
-        county: shippingCounty,
-        postcode: shippingPostcode,
-        country: shippingCountry,
-      },
+      shippingAddress: shipping,
     }))
 
-    // Step 4: Confirm payment with the fresh widgets
-    const timeoutId = setTimeout(() => {
-      setErrorMsg('Payment is taking longer than expected. Please check your email for confirmation or try again.')
-      setStatus('ready')
-    }, 60_000)
+    // Discount amount is server-derived from the redemption_token. The
+    // local `promo.discount` is only used for UI display.
+    const discountedAmount = Math.max(0, state.amount - Math.round((promo?.discount ?? 0) * 100))
 
     try {
-      const result = await freshHyper.confirmPayment({
-        elements: freshWidgets,
-        confirmParams: {
-          return_url: `${window.location.origin}${returnPath}`,
+      const checkout = await createCheckout({
+        orderId: orderIdRef.current ?? undefined,
+        amount: discountedAmount,
+        subtotal: state.amount,
+        redemptionToken: promo?.token,
+        description: state.description,
+        brand: getBrand(),
+        items: state.items,
+        quantity: state.quantity,
+        customer: {
+          firstName: customerFirstName.trim(),
+          lastName: customerLastName.trim(),
+          email: customerEmail.trim(),
+          phone: customerPhone.trim(),
+        },
+        shipping,
+        returnPath,
+      })
+      orderIdRef.current = checkout.orderId
+
+      if (!checkout.nextAction) {
+        throw new Error('This payment has already ended. Please try again.')
+      }
+
+      if (checkout.nextAction.type === 'mount') setEmbedded(true)
+      mountedCheckoutRef.current?.unmount()
+      // Redirect checkouts leave the page; embedded ones mount the payment box.
+      mountedCheckoutRef.current = handleNextAction(checkout.nextAction, paymentContainerRef.current, {
+        onSuccess: ({ checkoutId }) => {
+          window.location.href = `${window.location.origin}${returnPath}?checkout_id=${encodeURIComponent(checkoutId)}`
+        },
+        onFailure: () => {
+          setErrorMsg('Payment was declined. Please check your card details or try a different card.')
+          setStatus('ready')
         },
       })
-
-      clearTimeout(timeoutId)
-      console.log('[Checkout] confirmPayment result:', JSON.stringify(result))
-
-      if (result?.error) {
-        setErrorMsg(result.error.message)
-        setInitCount(c => c + 1)
-        return
-      }
-
-      const paymentStatus = result?.status
-      if (paymentStatus === 'succeeded' || paymentStatus === 'processing') {
-        setStatus('succeeded')
-        clearCart()
-        window.location.href = `${window.location.origin}${returnPath}`
-      } else if (paymentStatus === 'failed' || paymentStatus === 'cancelled') {
-        setErrorMsg('Payment was declined. Please check your card details or try a different card.')
-        setInitCount(c => c + 1)
-      } else if (paymentStatus === 'requires_payment_method') {
-        setErrorMsg('Payment failed. Please check your card details and try again.')
-        setInitCount(c => c + 1)
-      } else if (paymentStatus === 'requires_action') {
-        setErrorMsg('Additional authentication required. Please try again.')
-        setStatus('ready')
-      } else {
-        setErrorMsg(`Payment could not be completed (${paymentStatus || 'unknown'}). Please try again.`)
-        setInitCount(c => c + 1)
-      }
     } catch (err) {
-      clearTimeout(timeoutId)
-      console.error('Payment submission error:', err)
-      setErrorMsg(err instanceof Error ? err.message : 'Payment failed')
-      setInitCount(c => c + 1)
+      console.error('Failed to start payment:', err)
+      if (err instanceof CheckoutError) {
+        if (err.orderId) orderIdRef.current = err.orderId
+        setErrorMsg(err.code === 'order_in_progress'
+          ? 'A payment for this order is already in progress. Please finish it, or wait a minute and try again.'
+          : err.message)
+      } else {
+        setErrorMsg(err instanceof Error ? err.message : 'Failed to start payment. Please try again.')
+      }
+      setEmbedded(false)
+      setStatus('ready')
     }
-  }, [status, state, customerFirstName, customerLastName, customerEmail, customerPhone, shippingCountry, shippingAddress1, shippingAddress2, shippingCity, shippingCounty, shippingPostcode])
+  }, [status, state, promo, customerName, customerFirstName, customerLastName, customerEmail, customerPhone, shippingCountry, shippingAddress1, shippingAddress2, shippingCity, shippingCounty, shippingPostcode])
 
   if (!state) {
     return (
@@ -704,9 +536,9 @@ export default function CheckoutPage() {
               <p className="ck-section-subtitle">All transactions are secure and encrypted.</p>
 
               <form onSubmit={handleSubmit} className="ck-form">
-                {/* Credit-card visual shell — the actual card inputs live inside
-                    the Uprails iframe below. The header is purely chrome to
-                    match the mockup. */}
+                {/* Credit-card visual shell — card details are entered on the
+                    ShadowPay payment page (or in its embedded box below). The
+                    header is purely chrome to match the mockup. */}
                 <div className="ck-pay-group">
                   <div className="ck-pay-header">
                     <span className="ck-radio" />
@@ -727,18 +559,15 @@ export default function CheckoutPage() {
                     </span>
                   </div>
                   <div className="ck-pay-body">
-                    {status === 'loading' && (
-                      <div className="ck-payment-element">
-                        <div className="ck-loading">
-                          <div className="ck-spinner" />
-                          <p>Loading secure payment form...</p>
-                        </div>
-                      </div>
+                    {!embedded && (
+                      <p className="ck-payment-note">
+                        After you click Pay Now you'll be taken to our payment partner's secure page to enter your card details.
+                      </p>
                     )}
                     <div
                       ref={paymentContainerRef}
                       className="ck-payment-element"
-                      style={{ display: status === 'loading' ? 'none' : undefined }}
+                      style={{ display: embedded ? undefined : 'none' }}
                     />
                   </div>
                 </div>
@@ -749,19 +578,21 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                <button
-                  type="submit"
-                  className="ck-btn ck-btn--pay"
-                  disabled={status !== 'ready'}
-                >
-                  {status === 'submitting' ? (
-                    <span className="ck-btn-loading">
-                      <span className="ck-btn-spinner" /> Processing...
-                    </span>
-                  ) : (
-                    <>Pay Now</>
-                  )}
-                </button>
+                {!embedded && (
+                  <button
+                    type="submit"
+                    className="ck-btn ck-btn--pay"
+                    disabled={status !== 'ready'}
+                  >
+                    {status === 'submitting' ? (
+                      <span className="ck-btn-loading">
+                        <span className="ck-btn-spinner" /> Redirecting to secure payment...
+                      </span>
+                    ) : (
+                      <>Pay Now</>
+                    )}
+                  </button>
+                )}
 
                 <p className="ck-payment-note">
                   Your card details are handled securely by our payment processor and never touch our servers.

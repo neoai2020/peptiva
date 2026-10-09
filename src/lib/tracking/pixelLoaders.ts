@@ -74,7 +74,7 @@ export function trackMetaPageView(): void {
  * Resolves once `window.fbq` is callable, or after `timeoutMs` if the pixel
  * never loads. Needed because `useTracking` injects the pixel only after
  * `ConfigProvider` resolves its async fetch — fires on the order-complete
- * page (cold landing via Uprails return_url) race that boot, so callers
+ * page (cold landing via the ShadowPay returnUrl) race that boot, so callers
  * must wait or the Purchase event silently no-ops.
  *
  * Returns true if fbq became available, false on timeout. Callers should
