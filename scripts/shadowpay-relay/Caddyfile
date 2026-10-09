@@ -1,0 +1,24 @@
+# Forwards ShadowPay SDK calls from Supabase to KingsGate so they leave from
+# this server's fixed IP, the one allow-listed on the live API key.
+# Only /api/v1/sdk/* with the right X-Relay-Token is forwarded.
+
+{$RELAY_DOMAIN} {
+	@allowed {
+		path /api/v1/sdk/*
+		header X-Relay-Token {$RELAY_TOKEN}
+	}
+
+	handle @allowed {
+		request_header -X-Relay-Token
+		reverse_proxy https://app.kingsgatemerchants.com {
+			header_up Host app.kingsgatemerchants.com
+			header_up -X-Forwarded-For
+			header_up -X-Forwarded-Host
+			header_up -X-Forwarded-Proto
+		}
+	}
+
+	handle {
+		respond 403
+	}
+}
