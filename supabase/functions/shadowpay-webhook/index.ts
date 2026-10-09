@@ -44,7 +44,7 @@ serve(async (req: Request) => {
     // Passing the secret skips the SDK's secret fetch, which live keys
     // only allow from allow-listed IPs.
     const secret = Deno.env.get('SHADOWPAY_WEBHOOK_SECRET') || undefined
-    event = await getShadowPay().webhooks.verify(rawBody, signature, secret)
+    event = await (await getShadowPay()).webhooks.verify(rawBody, signature, secret)
   } catch (err) {
     if (err instanceof ShadowPayError && err.code === 'invalid_signature') {
       console.warn('[shadowpay-webhook] invalid signature:', err.message)

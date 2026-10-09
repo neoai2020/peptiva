@@ -39,7 +39,7 @@ serve(async (req: Request) => {
     // failure event, so surface a declined/expired checkout from ShadowPay
     // rather than leaving the shopper on "processing".
     try {
-      const checkout = await getShadowPay().checkouts.retrieve(checkout_id)
+      const checkout = await (await getShadowPay()).checkouts.retrieve(checkout_id)
       if (checkout.status === 'failed' || checkout.status === 'expired') {
         return jsonResponse({ status: 'failed' })
       }

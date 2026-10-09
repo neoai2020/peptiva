@@ -178,7 +178,7 @@ serve(async (req: Request) => {
 
     let checkout
     try {
-      checkout = await getShadowPay().checkouts.create({
+      checkout = await (await getShadowPay()).checkouts.create({
         orderId,
         amount: chargedAmount.toFixed(2),
         currency,
